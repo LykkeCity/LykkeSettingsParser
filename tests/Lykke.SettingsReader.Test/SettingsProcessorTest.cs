@@ -12,7 +12,12 @@ namespace Lykke.SettingsReader.Test
 ""subArray"":[{""test1"":""testString2"",""test2"":22,""test3"":""2017-05-03 22:13:45""},
 {""test1"":""testString3"",""test2"":23,""test3"":""2017-05-04 22:13:45""},
 {""test1"":""testString4"",""test2"":24,""test3"":""2017-05-05 22:13:45""},
-{""test1"":""testString5"",""test2"":25,""test3"":""2017-05-06 22:13:45""}]}";
+{""test1"":""testString5"",""test2"":25,""test3"":""2017-05-06 22:13:45""}],
+  ""subArrayGen"":[{""test1"":""testString6"",""test2"":26,""test3"":""2017-05-07 22:13:45""},
+{""test1"":""testString7"",""test2"":27,""test3"":""2017-05-08 22:13:45""},
+{""test1"":""testString8"",""test2"":28,""test3"":""2017-05-09 22:13:45""},
+{""test1"":""testString9"",""test2"":29,""test3"":""2017-05-10 22:13:45""}]
+}";
 
 
         [Fact]
@@ -38,14 +43,14 @@ namespace Lykke.SettingsReader.Test
         public void SubFieldMissJson()
         {
             var ex = Assert.Throws<RequaredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":21,", String.Empty)));
-            Assert.Equal(ex.FieldName, "SubArray.Test2");
+            Assert.Equal(ex.FieldName, "SubObject.Test2");
         }
 
         [Fact]
         public void SubFieldArrayMissJson()
         {
             var ex = Assert.Throws<RequaredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":24,", String.Empty)));
-            Assert.Equal(ex.FieldName, "SubArray.Test2");
+            Assert.Equal(ex.FieldName, "SubArray.2.Test2");
         }
 
         [Fact]
@@ -72,23 +77,42 @@ namespace Lykke.SettingsReader.Test
             Assert.Equal(model.SubObject.Test1, "testString1");
             Assert.Equal(model.SubObject.Test2, 21);
             Assert.Equal(model.SubObject.Test3, new DateTime(2017, 05, 02, 22, 13, 45));
+
             var lst = model.SubArray.ToList();
 
             Assert.Equal(lst[0].Test1, "testString2");
             Assert.Equal(lst[0].Test2, 22);
             Assert.Equal(lst[0].Test3, new DateTime(2017, 05, 03, 22, 13, 45));
 
-            Assert.Equal(lst[0].Test1, "testString3");
-            Assert.Equal(lst[0].Test2, 23);
-            Assert.Equal(lst[0].Test3, new DateTime(2017, 05, 04, 22, 13, 45));
+            Assert.Equal(lst[1].Test1, "testString3");
+            Assert.Equal(lst[1].Test2, 23);
+            Assert.Equal(lst[1].Test3, new DateTime(2017, 05, 04, 22, 13, 45));
 
-            Assert.Equal(lst[0].Test1, "testString4");
-            Assert.Equal(lst[0].Test2, 24);
-            Assert.Equal(lst[0].Test3, new DateTime(2017, 05, 05, 22, 13, 45));
+            Assert.Equal(lst[2].Test1, "testString4");
+            Assert.Equal(lst[2].Test2, 24);
+            Assert.Equal(lst[2].Test3, new DateTime(2017, 05, 05, 22, 13, 45));
 
-            Assert.Equal(lst[0].Test1, "testString5");
-            Assert.Equal(lst[0].Test2, 25);
-            Assert.Equal(lst[0].Test3, new DateTime(2017, 05, 06, 22, 13, 45));
+            Assert.Equal(lst[3].Test1, "testString5");
+            Assert.Equal(lst[3].Test2, 25);
+            Assert.Equal(lst[3].Test3, new DateTime(2017, 05, 06, 22, 13, 45));
+
+            lst = model.SubArrayGen.ToList();
+
+            Assert.Equal(lst[0].Test1, "testString6");
+            Assert.Equal(lst[0].Test2, 26);
+            Assert.Equal(lst[0].Test3, new DateTime(2017, 05, 07, 22, 13, 45));
+
+            Assert.Equal(lst[1].Test1, "testString7");
+            Assert.Equal(lst[1].Test2, 27);
+            Assert.Equal(lst[1].Test3, new DateTime(2017, 05, 08, 22, 13, 45));
+
+            Assert.Equal(lst[2].Test1, "testString8");
+            Assert.Equal(lst[2].Test2, 28);
+            Assert.Equal(lst[2].Test3, new DateTime(2017, 05, 09, 22, 13, 45));
+
+            Assert.Equal(lst[3].Test1, "testString9");
+            Assert.Equal(lst[3].Test2, 29);
+            Assert.Equal(lst[3].Test3, new DateTime(2017, 05, 10, 22, 13, 45));
         }
     }
 }
