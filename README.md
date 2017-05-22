@@ -20,5 +20,8 @@ public ModelClass {
 - **IncorrectJsonFormatException** - Throws when json string has incorrect format
 - **RequaredFieldEmptyException** - Throws when json string miss to fill any field. The Field name stores into the exception.
 
+## For Devops
+You will see the `The field "{FieldName}" empty in a json file.` message in an exeption. It should help you make a trouble shooting.
+
 [Nuget Package](https://www.nuget.org/packages/Lykke.Pkg.SettingsReader/)
 

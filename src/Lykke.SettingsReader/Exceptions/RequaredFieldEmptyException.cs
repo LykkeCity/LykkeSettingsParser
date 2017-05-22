@@ -7,5 +7,7 @@ namespace Lykke.SettingsReader.Exceptions
     public class RequaredFieldEmptyException : SettingsReaderException
     {
         public string FieldName { get; set; }
+
+        public override string Message => $@"The field ""{FieldName}"" empty in a json file.";
     }
 }
