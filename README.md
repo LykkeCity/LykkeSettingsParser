@@ -16,9 +16,9 @@ public ModelClass {
 }
 ```
 ## Types of Exceptions
-- ul **JsonStringEmptyException** - Throws when json string null or empty
-- ul **IncorrectJsonFormatException** - Throws when json string has incorrect format
-- ul **RequaredFieldEmptyException** - Throws when json string miss to fill any field. The Field name stores into the exception.
-```
+- **JsonStringEmptyException** - Throws when json string null or empty
+- **IncorrectJsonFormatException** - Throws when json string has incorrect format
+- **RequaredFieldEmptyException** - Throws when json string miss to fill any field. The Field name stores into the exception.
 
-```
+[Nuget Package](https://www.nuget.org/packages/Lykke.Pkg.SettingsReader/)
+
