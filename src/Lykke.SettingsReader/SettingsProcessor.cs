@@ -40,7 +40,7 @@ namespace Lykke.SettingsReader
             if (jsonObj.Type == JTokenType.Object)
             {
                 result = (T)Activator.CreateInstance(typeof(T));
-                var properties = (from p in typeof(T).GetProperties()
+                var properties = (from p in typeof(T).GetTypeInfo().GetProperties()
                                   where p.CanWrite && p.CanRead
                                   select p).ToList();
                 foreach (var pr in properties)
@@ -59,7 +59,7 @@ namespace Lykke.SettingsReader
                         };
                     }
 
-                    var method = typeof(SettingsProcessor).GetMethod("FeelChildrenFields", BindingFlags.Static | BindingFlags.NonPublic);
+                    var method = typeof(SettingsProcessor).GetTypeInfo().GetMethod("FeelChildrenFields", BindingFlags.Static | BindingFlags.NonPublic);
                     var genericMethod = method.MakeGenericMethod(pr.PropertyType);
                     try
                     {
@@ -93,7 +93,7 @@ namespace Lykke.SettingsReader
                 foreach (var elem in (JArray)jsonObj)
                 {
 
-                    var method = typeof(SettingsProcessor).GetMethod("FeelChildrenFields", BindingFlags.Static | BindingFlags.NonPublic);
+                    var method = typeof(SettingsProcessor).GetTypeInfo().GetMethod("FeelChildrenFields", BindingFlags.Static | BindingFlags.NonPublic);
                     var genericMethod = method.MakeGenericMethod(childType);
                     try
                     {
@@ -126,7 +126,7 @@ namespace Lykke.SettingsReader
             }
             else if (jsonObj.Type == JTokenType.Property)
             {
-                var method = typeof(SettingsProcessor).GetMethod("FeelChildrenFields", BindingFlags.Static | BindingFlags.NonPublic);
+                var method = typeof(SettingsProcessor).GetTypeInfo().GetMethod("FeelChildrenFields", BindingFlags.Static | BindingFlags.NonPublic);
                 var genericMethod = method.MakeGenericMethod(typeof(T));
                 try
                 {
@@ -149,7 +149,7 @@ namespace Lykke.SettingsReader
         public static bool IsGenericEnumerable(Type type)
         {
             return type.GetTypeInfo().IsGenericType &&
-                type.GetInterfaces().Any(
+                type.GetTypeInfo().GetInterfaces().Any(
                 ti => (ti == typeof(IEnumerable<>) || ti.Name == "IEnumerable"));
         }
 

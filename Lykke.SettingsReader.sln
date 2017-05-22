@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.SettingsReader.Test", "tests\Lykke.SettingsReader.Test\Lykke.SettingsReader.Test.csproj", "{3FA8C2EA-3261-4458-A4C0-F0926C936600}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lykke.SettingsReader", "src\Lykke.SettingsReader\Lykke.SettingsReader.csproj", "{D10938F5-2A35-46D3-894F-5A8D8031EBAD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.SettingsReader", "src\Lykke.SettingsReader\Lykke.SettingsReader.csproj", "{1B4D9947-00D8-4F53-A97C-A7648838D573}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{3FA8C2EA-3261-4458-A4C0-F0926C936600}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FA8C2EA-3261-4458-A4C0-F0926C936600}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FA8C2EA-3261-4458-A4C0-F0926C936600}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D10938F5-2A35-46D3-894F-5A8D8031EBAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D10938F5-2A35-46D3-894F-5A8D8031EBAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D10938F5-2A35-46D3-894F-5A8D8031EBAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D10938F5-2A35-46D3-894F-5A8D8031EBAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B4D9947-00D8-4F53-A97C-A7648838D573}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B4D9947-00D8-4F53-A97C-A7648838D573}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B4D9947-00D8-4F53-A97C-A7648838D573}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B4D9947-00D8-4F53-A97C-A7648838D573}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
