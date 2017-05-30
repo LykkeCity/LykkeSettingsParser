@@ -4,7 +4,7 @@ using System.Net.Http;
 
 namespace Lykke.SettingsReader
 {
-    public class GeneralSettingsReader
+    public class SettingsReader
     {
         public static T ReadGeneralSettings<T>(Uri url)
         {
