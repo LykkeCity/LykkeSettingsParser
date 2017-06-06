@@ -3,14 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Lykke.SettingsReader
 {
-    public static class SettingsProcessor
+    public static partial class SettingsProcessor
     {
         public static T Process<T>(string json)
         {
@@ -36,114 +35,62 @@ namespace Lykke.SettingsReader
 
         private static T FeelChildrenFields<T>(JToken jsonObj, string path = "")
         {
-            T result;
-            if (jsonObj.Type == JTokenType.Object)
+            return (T)Convert(jsonObj, typeof(T), path);
+        }
+
+        private static object Convert(JToken jsonObj, Type targetType, string path)
+        {
+            switch (jsonObj.Type)
             {
-                result = (T)Activator.CreateInstance(typeof(T));
-                var properties = (from p in typeof(T).GetTypeInfo().GetProperties()
-                                  where p.CanWrite && p.CanRead
-                                  select p).ToList();
-                foreach (var pr in properties)
-                {
-                    var jProp = ((JObject)jsonObj).Properties().FirstOrDefault(jp => jp.Name.Equals(pr.Name, StringComparison.CurrentCultureIgnoreCase));
-                    if (jProp == null)
-                    {
-                        if (pr.GetCustomAttributes(typeof(OptionalAttribute), false).Any())
-                        {
-                            continue;
-                        }
-
-                        throw new RequaredFieldEmptyException
-                        {
-                            FieldName = $"{path}.{pr.Name}".Trim('.')
-                        };
-                    }
-
-                    var method = typeof(SettingsProcessor).GetTypeInfo().GetMethod("FeelChildrenFields", BindingFlags.Static | BindingFlags.NonPublic);
-                    var genericMethod = method.MakeGenericMethod(pr.PropertyType);
-                    try
-                    {
-                        var jResult = genericMethod.Invoke(null, new[] { (object)jProp, $"{path}.{pr.Name}".Trim('.') });
-                        pr.SetValue(result, jResult);
-                    }
-                    catch (TargetInvocationException e)
-                    {
-                        throw e.InnerException;
-                    }
-
-                }
+                case JTokenType.Object:
+                    return Convert_FromObject((JObject)jsonObj, targetType, path);
+                case JTokenType.Array:
+                    return Convert_FromArray((JArray)jsonObj, targetType, path);
+                case JTokenType.Property:
+                    return Convert_FromProperty((JProperty)jsonObj, targetType, path);
+                default:
+                    return Convert_FromValue(((JValue)jsonObj).Value, targetType, path);
             }
-            else if (jsonObj.Type == JTokenType.Array)
+        }
+
+        private static object Convert_FromArray(JArray jsonObj, Type targetType, string path)
+        {
+            if (!IsEnumerable(targetType))
             {
-                if (!IsEnumerable(typeof(T)))
-                {
-                    throw new RequaredFieldEmptyException
-                    {
-                        FieldName = $"{path}.{((JArray)jsonObj)}".Trim('.')
-                    };
-                }
-                var childType = typeof(T).IsArray
-                        ? typeof(T).GetElementType()
-                        : typeof(T).GenericTypeArguments.First();
-
-                var concreteType = typeof(List<>).MakeGenericType(childType);
-                var res = (IList)Activator.CreateInstance(concreteType);
-
-                int i = 0;
-                foreach (var elem in (JArray)jsonObj)
-                {
-
-                    var method = typeof(SettingsProcessor).GetTypeInfo().GetMethod("FeelChildrenFields", BindingFlags.Static | BindingFlags.NonPublic);
-                    var genericMethod = method.MakeGenericMethod(childType);
-                    try
-                    {
-                        var jResult = genericMethod.Invoke(null, new[] { (object)elem, $"{path}.{i}".Trim('.') });
-                        res.Add(jResult);
-                    }
-                    catch (TargetInvocationException e)
-                    {
-                        throw e.InnerException;
-                    }
-
-                    i++;
-                }
-
-
-                if (typeof(T).IsArray)
-                {
-                    var arr = Array.CreateInstance(typeof(T).GetElementType(), res.Count);
-                    for (var ii = 0; ii < res.Count; ii++)
-                    {
-                        arr.SetValue(res[ii], ii);
-                    }
-                    result = (T)(object)arr;
-
-                }
-                else
-                {
-                    result = (T)res;
-                }
+                throw new RequiredFieldEmptyException($"{path}.{jsonObj}".Trim('.'));
             }
-            else if (jsonObj.Type == JTokenType.Property)
+            var childType = targetType.IsArray
+                ? targetType.GetElementType()
+                : targetType.GenericTypeArguments.First();
+
+            var concreteType = typeof(List<>).MakeGenericType(childType);
+            var res = (IList)Activator.CreateInstance(concreteType);
+
+            foreach (var elem in jsonObj)
             {
-                var method = typeof(SettingsProcessor).GetTypeInfo().GetMethod("FeelChildrenFields", BindingFlags.Static | BindingFlags.NonPublic);
-                var genericMethod = method.MakeGenericMethod(typeof(T));
-                try
+                var propertyPath = ConcatPath(path, res.Count.ToString());
+                res.Add(Convert(elem, childType, propertyPath));
+            }
+
+            if (targetType.IsArray)
+            {
+                var arr = Array.CreateInstance(targetType.GetElementType(), res.Count);
+                for (var ii = 0; ii < res.Count; ii++)
                 {
-                    result = (T)genericMethod.Invoke(null, new[] { (object)((JProperty)jsonObj).Value, $"{path}".Trim('.') });
+                    arr.SetValue(res[ii], ii);
                 }
-                catch (TargetInvocationException e)
-                {
-                    throw e.InnerException;
-                }
+                return arr;
 
             }
             else
             {
-                result = (T)Convert.ChangeType(((JValue)jsonObj).Value, typeof(T));
+                return res;
             }
+        }
 
-            return result;
+        private static object Convert_FromProperty(JProperty jsonObj, Type targetType, string path)
+        {
+            return Convert(jsonObj.Value, targetType, path);
         }
 
         public static bool IsGenericEnumerable(Type type)
@@ -156,6 +103,11 @@ namespace Lykke.SettingsReader
         public static bool IsEnumerable(Type type)
         {
             return IsGenericEnumerable(type) || type.IsArray;
+        }
+
+        private static string ConcatPath(string path, string propertyName)
+        {
+            return $"{path}.{propertyName}".Trim('.');
         }
     }
 }
