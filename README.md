@@ -23,5 +23,5 @@ public ModelClass {
 ## For Devops
 You will see the `The field "{FieldName}" empty in a json file.` message in an exeption. It should help you make a trouble shooting.
 
-[Nuget Package](https://www.nuget.org/packages/Lykke.Pkg.SettingsReader/)
+[Nuget Package](https://www.nuget.org/packages/Lykke.SettingsReader/)
 
