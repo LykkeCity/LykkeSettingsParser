@@ -11,7 +11,7 @@ namespace Lykke.SettingsReader
         /// </summary>
         /// <typeparam name="TSettings">Type of setting to load</typeparam>
         /// <param name="settingsUrl">Settings url</param>
-        /// <exception cref="SettingsLoaderException">
+        /// <exception cref="SettingsSourceException">
         /// Will be thrown if <paramref name="settingsUrl"/> and environment variable "SettingsUrl"
         /// are both not specified
         /// </exception>

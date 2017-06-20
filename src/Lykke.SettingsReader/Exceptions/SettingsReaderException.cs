@@ -9,6 +9,10 @@ namespace Lykke.SettingsReader.Exceptions
             
         }
 
+        public SettingsReaderException(string message) : base(message)
+        {
+        }
+
         public SettingsReaderException(string message, Exception e) : base(message, e)
         {
 

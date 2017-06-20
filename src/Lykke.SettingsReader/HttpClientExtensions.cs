@@ -13,7 +13,7 @@ namespace Lykke.SettingsReader
         /// <typeparam name="TSettings">Type of setting to load</typeparam>
         /// <param name="httpClient">Http client</param>
         /// <param name="settingsUrl">Settings url</param>
-        /// <exception cref="SettingsLoaderException">
+        /// <exception cref="SettingsSourceException">
         /// Will be thrown if <paramref name="settingsUrl"/> and environment variable "SettingsUrl"
         /// are both not specified
         /// </exception>
@@ -24,7 +24,7 @@ namespace Lykke.SettingsReader
 
             if (string.IsNullOrEmpty(settingsUrl))
             {
-                throw new SettingsLoaderException("settingsUrl not specified and environment variable 'SettingsUrl' is not defined");
+                throw new SettingsSourceException("settingsUrl not specified and environment variable 'SettingsUrl' is not defined");
             }
 
             using (var response = httpClient.GetAsync(settingsUrl).Result)
