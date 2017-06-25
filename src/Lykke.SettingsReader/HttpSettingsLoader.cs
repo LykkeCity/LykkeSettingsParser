@@ -20,7 +20,7 @@ namespace Lykke.SettingsReader
         {
             using (var httpClient = new HttpClient())
             {
-                return httpClient.LoadSettings<TSettings>();
+                return httpClient.LoadSettings<TSettings>(settingsUrl);
             }
         }
     }
