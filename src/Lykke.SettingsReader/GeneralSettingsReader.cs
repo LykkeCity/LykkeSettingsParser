@@ -14,7 +14,7 @@ namespace Lykke.SettingsReader
             return  SettingsProcessor.Process<T>(settingsData);
         }
 
-        public static T ReadGeneralSettings<T>(string path)
+        public static T ReadGeneralSettingsLocal<T>(string path)
         {
             var content = File.ReadAllText(path);
 
