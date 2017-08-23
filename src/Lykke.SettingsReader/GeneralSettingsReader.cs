@@ -1,24 +1,113 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Lykke.SettingsReader.Exceptions;
 
 namespace Lykke.SettingsReader
 {
     public class SettingsReader
     {
-        public static T ReadGeneralSettings<T>(Uri url)
-        {
-            var httpClient = new HttpClient { BaseAddress = url };
-            var settingsData = httpClient.GetStringAsync("").Result;
+        private static readonly HttpClient HttpClient = new HttpClient();
 
-            return  SettingsProcessor.Process<T>(settingsData);
+        public static async Task<TSettings> ReadGeneralSettingsLocalAsync<TSettings>(string path)
+        {
+            using (var reader = File.OpenText(path))
+            {
+                var content = await reader.ReadToEndAsync();
+                return SettingsProcessor.Process<TSettings>(content);
+            }
         }
 
-        public static T ReadGeneralSettingsLocal<T>(string path)
+        public static Task<TSettings> ReadGeneralSettingsAsync<TSettings>(string url)
         {
-            var content = File.ReadAllText(path);
+            return new SettingsReader(url).ReadSettingsAsync<TSettings>();
+        }
 
-            return SettingsProcessor.Process<T>(content);
+        private readonly ReaderWriterLockSlim _sync = new ReaderWriterLockSlim();
+        private Task<string> _currentReadTask;
+
+        private readonly string _settingsUrl;
+
+        public SettingsReader(string settingsUrl)
+        {
+            if (string.IsNullOrEmpty(settingsUrl))
+            {
+                throw new SettingsSourceException("SettingsUrl not specified.");
+            }
+
+            _settingsUrl = settingsUrl;
+        }
+
+        public async Task<TSettings> ReadSettingsAsync<TSettings>()
+        {
+            var settingsData = await ReadSettingsAsync();
+            return SettingsProcessor.Process<TSettings>(settingsData);
+        }
+
+        public async Task<TSettings> ReloadSettingsAsync<TSettings>(string currentValue, Func<TSettings, string> selectConnectionString)
+        {
+            var actualSettings = await ReadSettingsAsync<TSettings>();
+            var actualValue = selectConnectionString(actualSettings);
+
+            if (actualValue != currentValue)
+            {
+                return actualSettings;
+            }
+
+            var settingsData = await ReadSettingsAsync(true);
+            return SettingsProcessor.Process<TSettings>(settingsData);
+        }
+
+        private Task<string> ReadSettingsAsync(bool reload = false)
+        {
+            try
+            {
+                _sync.EnterReadLock();
+
+                // Обновление уже запрошенно
+                if (_currentReadTask != null && !_currentReadTask.GetAwaiter().IsCompleted)
+                {
+                    return _currentReadTask;
+                }
+
+                // Не требуется обновлять данные
+                if (_currentReadTask != null && !reload)
+                {
+                    return _currentReadTask;
+                }
+            }
+            finally
+            {
+                _sync.ExitReadLock();
+            }
+
+            try
+            {
+                _sync.EnterWriteLock();
+
+                // double check
+
+                // Обновление уже запрошенно
+                if (_currentReadTask != null && !_currentReadTask.GetAwaiter().IsCompleted)
+                {
+                    return _currentReadTask;
+                }
+
+                // Не требуется обновлять данные
+                if (_currentReadTask != null && !reload)
+                {
+                    return _currentReadTask;
+                }
+
+                return _currentReadTask = HttpClient.GetStringAsync(_settingsUrl);
+            }
+            finally
+            {
+                _sync.ExitWriteLock();
+            }
         }
     }
 }

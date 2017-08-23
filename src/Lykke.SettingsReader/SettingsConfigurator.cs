@@ -1,5 +1,5 @@
 using System;
-
+using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Tables;
 
@@ -12,28 +12,34 @@ namespace Lykke.SettingsReader
 {
     public class SettingsConfigurator<TSettings> : ISettingsConfigurator<TSettings>
     {
-        private readonly Func<TSettings> _loadSettings;
-        private Lazy<TSettings> _currentSettings;
+        private readonly string _path;
 
         public IServiceCollection Services { get; }
 
-        public TSettings Settings => _currentSettings.Value;
+#if DEBUG
+        Task<TSettings> GetSettings() => SettingsReader.ReadGeneralSettingsLocalAsync<TSettings>(_path);
+        Task<TSettings> ReloadSettings(string currentValue, Func<TSettings, string> selectConnectionString) 
+            => GetSettings();
+#else
+        Task<TSettings> GetSettings() => new SettingsReader(_path).ReadSettingsAsync<TSettings>();
+        Task<TSettings> ReloadSettings(string currentValue, Func<TSettings, string> selectConnectionString) 
+            => new SettingsReader(_path).ReloadSettingsAsync<TSettings>(currentValue, selectConnectionString);
+#endif
 
-        public SettingsConfigurator(IServiceCollection services, Func<TSettings> loadSettings)
+        public SettingsConfigurator(IServiceCollection services, string path)
         {
-            _loadSettings = loadSettings;
-            _currentSettings = new Lazy<TSettings>(_loadSettings);
+            _path = path;
             Services = services;
         }
 
         public TValue GetValue<TValue>(Func<TSettings, TValue> selectValue)
         {
-            return selectValue(Settings);
+            return selectValue(GetSettings().Result);
         }
 
         public ISettingsConfigurator<TSettings> AddSettingsObject<TValue>(Func<TSettings, TValue> selectValue) where TValue : class
         {
-            Services.AddScoped<TValue>(x => selectValue(Settings));
+            Services.AddScoped<TValue>(x => selectValue(GetSettings().Result));
 
             return this;
         }
@@ -47,7 +53,7 @@ namespace Lykke.SettingsReader
         {
             Services.AddSingleton<INoSQLTableStorage<TTableEntity>>(
                 x => AzureTableStorage<TTableEntity>.Create(
-                    () => selectConnectionString(ReloadSettings()),
+                    (currentValue) => selectConnectionString(ReloadSettings(currentValue, selectConnectionString).Result),
                     tableName,
                     x.GetService<ILog>(),
                     maxExecutionTimeout
@@ -55,12 +61,6 @@ namespace Lykke.SettingsReader
             );
 
             return this;
-        }
-
-        private TSettings ReloadSettings()
-        {
-            _currentSettings = new Lazy<TSettings>(_loadSettings);
-            return _currentSettings.Value;
         }
     }
 }
