@@ -12,23 +12,29 @@ namespace Lykke.SettingsReader
 {
     public class SettingsConfigurator<TSettings> : ISettingsConfigurator<TSettings>
     {
-        private readonly string _path;
-
         public IServiceCollection Services { get; }
 
 #if DEBUG
+        private readonly string _path;
+
         Task<TSettings> GetSettings() => SettingsReader.ReadGeneralSettingsLocalAsync<TSettings>(_path);
         Task<TSettings> ReloadSettings(string currentValue, Func<TSettings, string> selectConnectionString) 
             => GetSettings();
 #else
-        Task<TSettings> GetSettings() => new SettingsReader(_path).ReadSettingsAsync<TSettings>();
+        private readonly SettingsReader _settingsReader;
+
+        Task<TSettings> GetSettings() => _settingsReader.ReadSettingsAsync<TSettings>();
         Task<TSettings> ReloadSettings(string currentValue, Func<TSettings, string> selectConnectionString) 
-            => new SettingsReader(_path).ReloadSettingsAsync<TSettings>(currentValue, selectConnectionString);
+            => _settingsReader.ReloadSettingsAsync<TSettings>(currentValue, selectConnectionString);
 #endif
 
         public SettingsConfigurator(IServiceCollection services, string path)
         {
+#if DEBUG
             _path = path;
+#else
+            _settingsReader = new SettingsReader(path);
+#endif
             Services = services;
         }
 
@@ -37,27 +43,37 @@ namespace Lykke.SettingsReader
             return selectValue(GetSettings().Result);
         }
 
-        public ISettingsConfigurator<TSettings> AddSettingsObject<TValue>(Func<TSettings, TValue> selectValue) where TValue : class
+        public ISettingsConfigurator<TSettings> AddSettingsValue<TValue>(Func<TSettings, TValue> selectValue) where TValue : class
         {
-            Services.AddScoped<TValue>(x => selectValue(GetSettings().Result));
+            Services.AddScoped<TValue>(x => GetValue(selectValue));
 
             return this;
+        }
+
+        public INoSQLTableStorage<TTableEntity> GetTableStorage<TTableEntity>(
+            Func<TSettings, string> selectConnectionString,
+            string tableName,
+            ILog log,
+            TimeSpan? maxExecutionTimeout = null)
+
+            where TTableEntity : class, ITableEntity, new() {
+
+            string currentValue = null;
+            string GetConnectionString() => currentValue = selectConnectionString(ReloadSettings(currentValue, selectConnectionString).Result);
+
+            return AzureTableStorage<TTableEntity>.Create(GetConnectionString, tableName, log, maxExecutionTimeout);
         }
 
         public ISettingsConfigurator<TSettings> AddTableStorage<TTableEntity>(
             Func<TSettings, string> selectConnectionString,
             string tableName,
+            ILog log = null,
             TimeSpan? maxExecutionTimeout = null)
 
             where TTableEntity : class, ITableEntity, new()
         {
             Services.AddSingleton<INoSQLTableStorage<TTableEntity>>(
-                x => AzureTableStorage<TTableEntity>.Create(
-                    (currentValue) => selectConnectionString(ReloadSettings(currentValue, selectConnectionString).Result),
-                    tableName,
-                    x.GetService<ILog>(),
-                    maxExecutionTimeout
-                )
+                x => GetTableStorage<TTableEntity>(selectConnectionString, tableName, log ?? x.GetService<ILog>(), maxExecutionTimeout)
             );
 
             return this;
