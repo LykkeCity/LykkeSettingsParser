@@ -1,6 +1,4 @@
-﻿using Lykke.SettingsReader.Attributes;
-
-namespace Lykke.SettingsReader.Test.Models
+﻿namespace Lykke.SettingsReader.Test.Models
 {
     class TestOptionAttrModel : TestModel
     {

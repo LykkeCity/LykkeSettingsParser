@@ -1,4 +1,4 @@
-﻿namespace Lykke.SettingsReader.Exceptions
+﻿namespace Lykke.SettingsReader
 {
     public class JsonStringEmptyException : SettingsReaderException
     {

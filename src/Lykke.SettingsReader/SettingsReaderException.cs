@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Lykke.SettingsReader.Exceptions
+namespace Lykke.SettingsReader
 {
     public class SettingsReaderException : Exception
     {
@@ -19,4 +19,3 @@ namespace Lykke.SettingsReader.Exceptions
         }
     }
 }
-
