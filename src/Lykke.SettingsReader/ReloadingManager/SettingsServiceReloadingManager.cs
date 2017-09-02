@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace Lykke.SettingsReader
         {
             if (string.IsNullOrEmpty(settingsUrl))
             {
-                throw new SettingsSourceException("SettingsUrl not specified.");
+                throw new ArgumentException("Url not specified.", nameof(settingsUrl));
             }
 
             _settingsUrl = settingsUrl;

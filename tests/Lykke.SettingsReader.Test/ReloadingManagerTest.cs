@@ -1,8 +1,8 @@
+using System;
 using System.Threading.Tasks;
 
 using Lykke.SettingsReader.Test.Models;
-
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 using Moq;
 
@@ -16,47 +16,12 @@ namespace Lykke.SettingsReader.Test
         public void LoadSettings_SettingUrlEmpty_Test()
         {
             //Arrange
-            var servicesMock = new Mock<IServiceCollection>();
+            var servicesMock = new Mock<IConfiguration>();
+            servicesMock.Setup(x => x[It.IsAny<string>()]).Returns("");
 
             //Act / Assert
-            Assert.Throws<SettingsSourceException>(() => servicesMock.Object.LoadSettings<TestModel>(""));
-            servicesMock.Verify(x => x.Add(It.IsAny<ServiceDescriptor>()), Times.Never());
-        }
-
-        [Fact]
-        public void LoadSettings_Test()
-        {
-            //Arrange
-            var servicesMock = new Mock<IServiceCollection>();
-            ServiceDescriptor addedDescriptor = null;
-            servicesMock
-                .Setup(x => x.Add(It.IsAny<ServiceDescriptor>()))
-                .Callback<ServiceDescriptor>(item => addedDescriptor = item);
-
-            //Act
-            servicesMock.Object.LoadSettings<TestModel>("Url");
-
-            // Assert
-            servicesMock.Verify(x => x.Add(It.IsAny<ServiceDescriptor>()), Times.Once());
-            Assert.Equal(typeof(SettingsServiceReloadingManager<TestModel>), addedDescriptor?.ImplementationInstance?.GetType());
-        }
-
-        [Fact]
-        public void LoadLocalSettings_Test()
-        {
-            //Arrange
-            var servicesMock = new Mock<IServiceCollection>();
-            ServiceDescriptor addedDescriptor = null;
-            servicesMock
-                .Setup(x => x.Add(It.IsAny<ServiceDescriptor>()))
-                .Callback<ServiceDescriptor>(item => addedDescriptor = item);
-
-            //Act
-            servicesMock.Object.LoadLocalSettings<TestModel>("Url");
-
-            // Assert
-            servicesMock.Verify(x => x.Add(It.IsAny<ServiceDescriptor>()), Times.Once());
-            Assert.Equal(typeof(LocalSettingsReloadingManager<TestModel>), addedDescriptor?.ImplementationInstance?.GetType());
+            Assert.Throws<ArgumentException>(() => servicesMock.Object.LoadSettings<TestModel>());
+            servicesMock.Verify(x => x[SettingsConfiguratorExtensions.DefaultConfigurationKey], Times.Once());
         }
 
         public class TestSettings {

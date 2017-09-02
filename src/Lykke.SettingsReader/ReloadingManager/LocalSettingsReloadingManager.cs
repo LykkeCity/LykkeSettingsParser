@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Lykke.SettingsReader
@@ -9,6 +10,11 @@ namespace Lykke.SettingsReader
 
         public LocalSettingsReloadingManager(string path)
         {
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new ArgumentException("Path not specified.", nameof(path));
+            }
+
             _path = path;
         }
 

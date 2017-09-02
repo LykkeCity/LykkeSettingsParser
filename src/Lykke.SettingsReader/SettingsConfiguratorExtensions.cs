@@ -1,21 +1,21 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace Lykke.SettingsReader
 {
     public static class SettingsConfiguratorExtensions
     {
-        public static IReloadingManager<TSettings> LoadSettings<TSettings>(this IServiceCollection services, string settingsUrl) where TSettings : class
+        public static readonly string DefaultConfigurationKey = "SettingsUrl";
+
+        public static IReloadingManager<TSettings> LoadSettings<TSettings>(this IConfiguration configuration, string key = null) where TSettings : class
         {
-            var reloadingManager = new SettingsServiceReloadingManager<TSettings>(settingsUrl);
-            services.AddSingleton<IReloadingManager<TSettings>>(reloadingManager);
-            return reloadingManager;
+            var settingsUrl = configuration[key ?? DefaultConfigurationKey];
+            return new SettingsServiceReloadingManager<TSettings>(settingsUrl);
         }
 
-        public static IReloadingManager<TSettings> LoadLocalSettings<TSettings>(this IServiceCollection services, string path) where TSettings : class
+        public static IReloadingManager<TSettings> LoadLocalSettings<TSettings>(this IConfiguration configuration, string key = null) where TSettings : class
         {
-            var reloadingManager = new LocalSettingsReloadingManager<TSettings>(path);
-            services.AddSingleton<IReloadingManager<TSettings>>(reloadingManager);
-            return reloadingManager;
+            var localPath = configuration[key ?? DefaultConfigurationKey];
+            return new LocalSettingsReloadingManager<TSettings>(localPath);
         }
     }
 }
