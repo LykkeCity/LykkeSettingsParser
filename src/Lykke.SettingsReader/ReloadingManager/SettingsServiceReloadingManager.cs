@@ -7,8 +7,9 @@ namespace Lykke.SettingsReader
     public class SettingsServiceReloadingManager<TSettings> : ReloadingManagerBase<TSettings>
     {
         private readonly string _settingsUrl;
+        private readonly Action<TSettings> _configure;
 
-        public SettingsServiceReloadingManager(string settingsUrl)
+        public SettingsServiceReloadingManager(string settingsUrl, Action<TSettings> configure = null)
         {
             if (string.IsNullOrEmpty(settingsUrl))
             {
@@ -16,6 +17,7 @@ namespace Lykke.SettingsReader
             }
 
             _settingsUrl = settingsUrl;
+            _configure = configure;
         }
 
         protected override async Task<TSettings> Load()
@@ -23,7 +25,9 @@ namespace Lykke.SettingsReader
             using (var httpClient = new HttpClient())
             {
                 var content = await httpClient.GetStringAsync(_settingsUrl);
-                return SettingsProcessor.Process<TSettings>(content);
+                var settings = SettingsProcessor.Process<TSettings>(content);
+                _configure?.Invoke(settings);
+                return settings;
             }
         }
     }
