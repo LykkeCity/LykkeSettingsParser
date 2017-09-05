@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Test.Models;
+
 using Xunit;
 
 namespace Lykke.SettingsReader.Test
