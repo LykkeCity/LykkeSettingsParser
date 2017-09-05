@@ -22,6 +22,8 @@ namespace Lykke.SettingsReader
 
         protected override async Task<TSettings> Load()
         {
+            Console.WriteLine($"{DateTime.UtcNow} Readding settings");
+
             using (var httpClient = new HttpClient())
             {
                 var content = await httpClient.GetStringAsync(_settingsUrl);
