@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Lykke.SettingsReader
+namespace Lykke.SettingsReader.Exceptions
 {
     public class FieldException : SettingsReaderException
     {

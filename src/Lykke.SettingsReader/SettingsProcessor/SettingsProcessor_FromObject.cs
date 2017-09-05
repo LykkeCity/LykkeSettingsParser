@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
+using Lykke.SettingsReader.Attributes;
+using Lykke.SettingsReader.Exceptions;
+
 using Newtonsoft.Json.Linq;
 
 namespace Lykke.SettingsReader

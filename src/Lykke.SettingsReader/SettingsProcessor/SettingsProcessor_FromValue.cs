@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 
+using Lykke.SettingsReader.Exceptions;
+
 namespace Lykke.SettingsReader
 {
     public static partial class SettingsProcessor

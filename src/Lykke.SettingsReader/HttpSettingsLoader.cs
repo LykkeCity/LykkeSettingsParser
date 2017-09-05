@@ -1,37 +1,6 @@
 ﻿using System;
 
 namespace Lykke.SettingsReader {
-    [Obsolete("Will be deleted. Have to use ArgumentException.")]
-    public class SettingsSourceException : SettingsReaderException
-    {
-        public SettingsSourceException()
-        {
-        }
-
-        public SettingsSourceException(string message) :
-            base(message)
-        {
-        }
-
-        public SettingsSourceException(string message, Exception inner) :
-            base(message, inner)
-        {
-        }
-    }
-
-    [Obsolete("Will be deleted. Have to use IConfiguration.LoadSettings extension method.")]
-    public class SettingsReader {
-        public static T ReadGeneralSettings<T>(Uri url) {
-            var reloadingManager = new SettingsServiceReloadingManager<T>(url.ToString());
-            return reloadingManager.CurrentValue;
-        }
-
-        public static T ReadGeneralSettings<T>(string path) {
-            var reloadingManager = new LocalSettingsReloadingManager<T>(path);
-            return reloadingManager.CurrentValue;
-        }
-    }
-
     [Obsolete("Will be deleted. Have to use IConfiguration.LoadSettings extension method.")]
     public static class HttpSettingsLoader
     {
