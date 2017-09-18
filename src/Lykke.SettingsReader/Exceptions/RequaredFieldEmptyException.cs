@@ -8,6 +8,6 @@ namespace Lykke.SettingsReader.Exceptions
     {
         public string FieldName { get; set; }
 
-        public override string Message => $@"The field ""{FieldName}"" empty in a json file.";
+        public override string Message => $@"The field ""{FieldName}"" is empty in provided json.";
     }
 }
