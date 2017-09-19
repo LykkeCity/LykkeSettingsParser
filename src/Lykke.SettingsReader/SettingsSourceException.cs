@@ -1,7 +1,9 @@
 ﻿using System;
 
-namespace Lykke.SettingsReader.Exceptions
-{
+using Lykke.SettingsReader.Exceptions;
+
+namespace Lykke.SettingsReader {
+    [Obsolete("Will be deleted. Have to use ArgumentException.")]
     public class SettingsSourceException : SettingsReaderException
     {
         public SettingsSourceException()

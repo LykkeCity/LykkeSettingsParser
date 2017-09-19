@@ -1,8 +1,7 @@
-﻿using System.Net.Http;
-using Lykke.SettingsReader.Exceptions;
+﻿using System;
 
-namespace Lykke.SettingsReader
-{
+namespace Lykke.SettingsReader {
+    [Obsolete("Will be deleted. Have to use IConfiguration.LoadSettings extension method.")]
     public static class HttpSettingsLoader
     {
         /// <summary>
@@ -18,10 +17,15 @@ namespace Lykke.SettingsReader
         /// <returns>Loaded and parsed settings</returns>
         public static TSettings Load<TSettings>(string settingsUrl = null)
         {
-            using (var httpClient = new HttpClient())
+            settingsUrl = settingsUrl ?? Environment.GetEnvironmentVariable("SettingsUrl");
+            if (string.IsNullOrEmpty(settingsUrl))
             {
-                return httpClient.LoadSettings<TSettings>(settingsUrl);
+                throw new SettingsSourceException("settingsUrl not specified and environment variable 'SettingsUrl' is not defined");
             }
+
+            var reloadingManager = new SettingsServiceReloadingManager<TSettings>(settingsUrl);
+            return reloadingManager.CurrentValue;
         }
     }
+
 }

@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Test.Models;
+
 using Xunit;
 
 namespace Lykke.SettingsReader.Test
@@ -35,21 +37,21 @@ namespace Lykke.SettingsReader.Test
         [Fact]
         public void FieldMissJson()
         {
-            var ex = Assert.Throws<RequaredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":2,", String.Empty)));
+            var ex = Assert.Throws<RequiredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":2,", String.Empty)));
             Assert.Equal(ex.FieldName, "Test2");
         }
 
         [Fact]
         public void SubFieldMissJson()
         {
-            var ex = Assert.Throws<RequaredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":21,", String.Empty)));
+            var ex = Assert.Throws<RequiredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":21,", String.Empty)));
             Assert.Equal(ex.FieldName, "SubObject.Test2");
         }
 
         [Fact]
         public void SubFieldArrayMissJson()
         {
-            var ex = Assert.Throws<RequaredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":24,", String.Empty)));
+            var ex = Assert.Throws<RequiredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":24,", String.Empty)));
             Assert.Equal(ex.FieldName, "SubArray.2.Test2");
         }
 
