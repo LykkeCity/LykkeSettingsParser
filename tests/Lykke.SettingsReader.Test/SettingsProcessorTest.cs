@@ -116,5 +116,11 @@ namespace Lykke.SettingsReader.Test
             Assert.Equal(lst[3].Test2, 29);
             Assert.Equal(lst[3].Test3, new DateTime(2017, 05, 10, 22, 13, 45));
         }
+
+        //[Fact]
+        //public void TestLykkePay()
+        //{
+        //    var model = SettingsReader.ReadGeneralSettings<Settings>(new Uri("https://settings-test-k8s.lykkex.net/317de226c5646c48443cd7114b0932f_PayAPI"));
+        //}
     }
 }

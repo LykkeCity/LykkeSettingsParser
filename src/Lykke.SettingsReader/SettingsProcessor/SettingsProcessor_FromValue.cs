@@ -11,9 +11,14 @@ namespace Lykke.SettingsReader
     {
         private static readonly IDictionary<Type, Func<object, object>> ScalarConverters = new Dictionary<Type, Func<object, object>>
         {
-            { typeof(TimeSpan), x => TimeSpan.Parse(x.ToString()) },
+            { typeof(TimeSpan), x => TimeSpan.Parse(x.ToString(), CultureInfo.InvariantCulture) },
             { typeof(Guid), x => Guid.Parse(x.ToString()) },
-            { typeof(DateTime), x => DateTime.Parse(x.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) }
+            { typeof(DateTime), x => DateTime.Parse(x.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) },
+            { typeof(decimal), x => decimal.Parse(x.ToString(), CultureInfo.InvariantCulture)},
+            { typeof(double), x => double.Parse(x.ToString(), CultureInfo.InvariantCulture)},
+            { typeof(float), x => float.Parse(x.ToString(), CultureInfo.InvariantCulture)},
+            { typeof(int), x => int.Parse(x.ToString(), CultureInfo.InvariantCulture)},
+            { typeof(long), x => long.Parse(x.ToString(), CultureInfo.InvariantCulture)}
         };
 
         private static object Convert_FromValue(object value, Type targetType, string path)
