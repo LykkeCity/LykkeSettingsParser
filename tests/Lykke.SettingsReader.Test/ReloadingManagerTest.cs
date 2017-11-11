@@ -20,7 +20,7 @@ namespace Lykke.SettingsReader.Test
             servicesMock.Setup(x => x[It.IsAny<string>()]).Returns("");
 
             //Act / Assert
-            Assert.Throws<ArgumentException>(() => servicesMock.Object.LoadSettings<TestModel>());
+            Assert.Throws<InvalidOperationException>(() => servicesMock.Object.LoadSettings<TestModel>());
             servicesMock.Verify(x => x[SettingsConfiguratorExtensions.DefaultConfigurationKey], Times.Once());
         }
 
