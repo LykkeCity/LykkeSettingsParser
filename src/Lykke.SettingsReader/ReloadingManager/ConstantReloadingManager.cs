@@ -1,19 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 
 namespace Lykke.SettingsReader.ReloadingManager
 {
-    public class ConstantReloadingManager<T> : ReloadingManagerBase<T>
+    public static class ConstantReloadingManager
     {
-        private readonly T _value;
-
-        public ConstantReloadingManager(T value)
+        public static IReloadingManager<T> From<T>(T value)
         {
-            _value = value;
-        }
-
-        protected override Task<T> Load()
-        {
-            return Task.FromResult(_value);
+            return new GenericReloadingManager<T>(value);
         }
     }
 }
