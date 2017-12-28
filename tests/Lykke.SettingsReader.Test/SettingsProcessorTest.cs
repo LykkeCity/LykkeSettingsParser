@@ -18,8 +18,9 @@ namespace Lykke.SettingsReader.Test
   ""subArrayGen"":[{""test1"":""testString6"",""test2"":26,""test3"":""2017-05-07 22:13:45""},
 {""test1"":""testString7"",""test2"":27,""test3"":""2017-05-08 22:13:45""},
 {""test1"":""testString8"",""test2"":28,""test3"":""2017-05-09 22:13:45""},
-{""test1"":""testString9"",""test2"":29,""test3"":""2017-05-10 22:13:45""}]
-}";
+{""test1"":""testString9"",""test2"":29,""test3"":""2017-05-10 22:13:45""}],
+""TestDouble"" : 0.2
+    }";
 
 
         [Fact]
@@ -79,7 +80,7 @@ namespace Lykke.SettingsReader.Test
             Assert.Equal(model.SubObject.Test1, "testString1");
             Assert.Equal(model.SubObject.Test2, 21);
             Assert.Equal(model.SubObject.Test3, new DateTime(2017, 05, 02, 22, 13, 45));
-
+            Assert.Equal(model.TestDouble, 0.2);
             var lst = model.SubArray.ToList();
 
             Assert.Equal(lst[0].Test1, "testString2");
@@ -115,6 +116,8 @@ namespace Lykke.SettingsReader.Test
             Assert.Equal(lst[3].Test1, "testString9");
             Assert.Equal(lst[3].Test2, 29);
             Assert.Equal(lst[3].Test3, new DateTime(2017, 05, 10, 22, 13, 45));
+
+          
         }
 
         //[Fact]

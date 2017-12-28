@@ -8,8 +8,11 @@ namespace Lykke.SettingsReader.Test.Models
     {
         public SubTestModel SubObject { get; set; }
 
+        public double TestDouble { get; set; }
+
         public SubTestModel[] SubArray { get; set; }
 
         public IEnumerable<SubTestModel> SubArrayGen { get; set; }
+
     }
 }

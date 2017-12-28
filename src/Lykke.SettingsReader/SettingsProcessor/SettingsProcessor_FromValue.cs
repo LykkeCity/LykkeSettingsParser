@@ -11,16 +11,15 @@ namespace Lykke.SettingsReader
     {
         private static readonly IDictionary<Type, Func<object, object>> ScalarConverters = new Dictionary<Type, Func<object, object>>
         {
-            { typeof(TimeSpan), x => TimeSpan.Parse(x.ToString(), CultureInfo.InvariantCulture) },
-            { typeof(Guid), x => Guid.Parse(x.ToString()) },
+            { typeof(TimeSpan), x => TimeSpan.Parse(string.Format(CultureInfo.InvariantCulture, $"{x}"), CultureInfo.InvariantCulture) },
+            { typeof(Guid), x => Guid.Parse(x.ToString())},
             { typeof(DateTime), x => DateTime.Parse(x.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) },
-            { typeof(decimal), x => decimal.Parse(x.ToString(), CultureInfo.InvariantCulture)},
-            { typeof(double), x => double.Parse(x.ToString(), CultureInfo.InvariantCulture)},
-            { typeof(float), x => float.Parse(x.ToString(), CultureInfo.InvariantCulture)},
-            { typeof(int), x => int.Parse(x.ToString(), CultureInfo.InvariantCulture)},
-            { typeof(long), x => long.Parse(x.ToString(), CultureInfo.InvariantCulture)}
+            { typeof(decimal), x => x is string ? decimal.Parse((string)x, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(decimal))},
+            { typeof(double), x =>  x is string ? double.Parse((string)x, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(double))},
+            { typeof(float), x =>  x is string ?  float.Parse((string)x, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(float))},
+            { typeof(int), x =>  x is string ?  int.Parse((string)x, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(int))},
+            { typeof(long), x =>  x is string ?  long.Parse((string)x, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(long))}
         };
-
         private static object Convert_FromValue(object value, Type targetType, string path)
         {
             var targetInfo = targetType.GetTypeInfo();

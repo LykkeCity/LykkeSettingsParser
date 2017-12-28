@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Lykke.SettingsReader.Test.Models;
 using Xunit;
 
@@ -67,6 +68,16 @@ namespace Lykke.SettingsReader.Test
             Assert.Equal(null == value ? (object)null : DateTime.Parse(value), result.Value);
         }
 
+        [Theory(DisplayName = "Value:" + nameof(TestDoubleS))]
+        [InlineData("0.2")]
+        public void TestDoubleS(string value)
+        {
+            var result = TestSettings<double>.FormatJsonString(value);
+            Assert.Equal(double.Parse(value, CultureInfo.InvariantCulture), result.Value);
+        }
+
+        
+        
         [Theory(DisplayName = "Value:" + nameof(TestGuid))]
         [InlineData("b2f1216a-a792-4d08-8a7a-f51c2304eb4c")]
         [InlineData("{b0e48349-be76-4785-bda2-d938c5553ef0}")]
