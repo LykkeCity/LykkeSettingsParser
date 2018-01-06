@@ -2,8 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
-
+using System.Text;
+using Flurl;
+using Flurl.Http;
+using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
 
 using Newtonsoft.Json;
@@ -31,6 +36,8 @@ namespace Lykke.SettingsReader
             }
 
             var result = FeelChildrenFields<T>(jsonObj);
+
+            ProcessChecks(result);
 
             return result;
         }
@@ -110,6 +117,147 @@ namespace Lykke.SettingsReader
         private static string ConcatPath(string path, string propertyName)
         {
             return $"{path}.{propertyName}".Trim('.');
+        }
+
+        private static void ProcessChecks<T>(T model)
+        {
+            var result = new StringBuilder();
+            var attributeTypes = new List<Type>
+            {
+                typeof(HttpCheckAttribute),
+                typeof(TcpCheckAttribute),
+                typeof(AmqpCheckAttribute)
+            };
+
+            var properties = (from p in model.GetType().GetTypeInfo().GetProperties()
+                where p.CanWrite && p.CanRead && attributeTypes.Any(item => Attribute.IsDefined(p, item)) select p).ToList();
+
+            if (!properties.Any())
+                return;
+
+            Console.WriteLine("Checking services");
+
+            foreach (var property in properties)
+            {
+                string value = property.GetValue(model).ToString();
+                string url = string.Empty;
+                string address;
+                int port;
+                bool checkResult = false;
+
+                var checkAttribute = property.GetCustomAttribute(typeof(Attribute));
+
+                switch (checkAttribute)
+                {
+                    case HttpCheckAttribute httpCheck:
+                        url = Url.Combine(value, httpCheck.Url);
+                    
+                        if (!Url.IsValid(url))
+                            throw new CheckFieldException(property.Name, "Wrong url");
+
+                        checkResult = HttpCheck(url);
+                        break;
+                    case TcpCheckAttribute tcpCheck:
+                    {
+                        if (tcpCheck.IsPortProvided)
+                        {
+                            address = value;
+
+                            if (string.IsNullOrEmpty(tcpCheck.PortName))
+                            {
+                                port = tcpCheck.Port;
+                            }
+                            else
+                            {
+                                var portProperty = model.GetType().GetTypeInfo().GetProperty(tcpCheck.PortName);
+
+                                if (portProperty == null)
+                                    throw new CheckFieldException(property.Name, $"Property '{tcpCheck.PortName}' not found");
+
+                                var portValue = portProperty.GetValue(model).ToString();
+                            
+                                if (!int.TryParse(portValue, out port))
+                                    throw new CheckFieldException(property.Name, $"Wrong port value in property '{tcpCheck.PortName}'");
+                            }
+                        }
+                        else
+                        {
+                            if (SplitParts(value, ':', 2, out var values))
+                            {
+                                address = values[0];
+                                port = System.Convert.ToInt32(values[1]);
+                            }
+                            else
+                            {
+                                throw new CheckFieldException(property.Name, "Wrong address");
+                            }
+                        }
+
+                        url = $"{address}:{port}";
+                        checkResult = TcpCheck(address, port);
+                        break;
+                    }
+                    case AmqpCheckAttribute amqpCheck:
+                    {
+                        if (SplitParts(value, '@', 2, out var values) && SplitParts(values[1], ':', 2, out var amqpValues))
+                        {
+                            address = amqpValues[0];
+                            port = System.Convert.ToInt32(amqpValues[1]);
+                        }
+                        else
+                        {
+                            throw new CheckFieldException(property.Name, "Wrong amqp connection string");
+                        }
+
+                        url = $"{address}:{port}";
+                        checkResult = TcpCheck(address, port);
+                        break;
+                    }
+                }
+
+                result.AppendLine($"Checking '{url}' - {(checkResult ? "OK" : "Failed")}");
+            }
+
+            Console.WriteLine(result.ToString());
+        }
+
+        private static bool SplitParts(string value, char splitChar, int length, out string[] values)
+        {
+            values = value.Split(splitChar);
+            return values != null && values.Length == length;
+        }
+
+        private static bool HttpCheck(string url)
+        {
+            try
+            {
+                var resp = url.GetAsync().Result;
+                return resp.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
+        private static bool TcpCheck(string address, int port)
+        {
+            bool result;
+
+            try
+            {
+                using (var tcp = new TcpClient())
+                {
+                    tcp.Connect(address, port);
+                    result = tcp.Connected;
+                }
+            }
+            catch
+            {
+                result = false;
+            }
+
+            return result;
         }
     }
 }

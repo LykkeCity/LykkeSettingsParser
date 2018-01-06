@@ -120,10 +120,70 @@ namespace Lykke.SettingsReader.Test
           
         }
 
-        //[Fact]
-        //public void TestLykkePay()
-        //{
-        //    var model = SettingsReader.ReadGeneralSettings<Settings>(new Uri("https://settings-test-k8s.lykkex.net/317de226c5646c48443cd7114b0932f_PayAPI"));
-        //}
+        [Fact]
+        public void HttpCheckAttribute_IsOk()
+        {
+            SettingsProcessor.Process<TestHttpCheckModel>("{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local/', 'Port':5672, 'Num': 1234}");
+        }
+        
+        [Fact]
+        public void HttpCheckAttribute_Error()
+        {
+            var exception = Record.Exception(() => 
+                SettingsProcessor.Process<TestHttpCheckModel>("{'ServiceUrl': 'not_url_at_all', 'Port':5672, 'Num': 1234}")
+            );
+
+            Assert.NotNull(exception);
+            Assert.IsType<CheckFieldException>(exception);
+            Assert.Equal("Wrong url", exception.Message);
+        }
+        
+        [Fact]
+        public void TcpCheckAttribute_IsOk()
+        {
+            SettingsProcessor.Process<TestTcpCheckModel>("{'HostPort': '127.0.0.1:5672', 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}");
+        }
+        
+        [Fact]
+        public void TcpCheckAttribute_IsWrongPortValue()
+        {
+            var exception = Record.Exception(() => 
+                SettingsProcessor.Process<TestTcpCheckModel>("{'HostPort': '127.0.0.1:5672', 'Host': '127.0.0.1', 'Port': 'not a port', 'Server': '127.0.0.1'}")
+            );
+
+            Assert.NotNull(exception);
+            Assert.IsType<CheckFieldException>(exception);
+            Assert.Equal("Wrong port value in property 'Port'", exception.Message);
+        }
+        
+        [Fact]
+        public void TcpCheckAttribute_WrongPortProperty()
+        {
+            var exception = Record.Exception(() => 
+                SettingsProcessor.Process<WrongTestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}")
+            );
+        
+            Assert.NotNull(exception);
+            Assert.IsType<CheckFieldException>(exception);
+            Assert.Equal("Property 'ServicePort' not found", exception.Message);
+        }
+        
+        [Fact]
+        public void AmqpCheckAttribute_IsOk()
+        {
+            SettingsProcessor.Process<TestAmqpCheckModel>("{'Rabbit': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:5672'}");
+        }
+        
+        [Fact]
+        public void AmqpCheckAttribute_IsError()
+        {
+            var exception = Record.Exception(() => 
+                SettingsProcessor.Process<TestAmqpCheckModel>("{'Rabbit': 'rabbit-registration.lykke-service.svc.cluster.local:5672'}")
+            );
+        
+            Assert.NotNull(exception);
+            Assert.IsType<CheckFieldException>(exception);
+            Assert.Equal("Wrong amqp connection string", exception.Message);
+        }
     }
 }
