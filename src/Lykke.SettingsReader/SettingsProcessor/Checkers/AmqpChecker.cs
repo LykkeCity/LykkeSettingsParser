@@ -1,7 +1,8 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Extensions;
-using Lykke.SettingsReader.Helpers;
+using RabbitMQ.Client;
 
 namespace Lykke.SettingsReader.Checkers
 {
@@ -18,11 +19,24 @@ namespace Lykke.SettingsReader.Checkers
                 if (!int.TryParse(amqpValues[1], out var port))
                     throw new CheckFieldException(property.Name, value, "Invalid port");
 
-                return new CheckFieldResult
+                var result = new CheckFieldResult {Url = $"{address}:{port}"};
+
+                try
                 {
-                    Url = $"{address}:{port}",
-                    Result = TcpHelper.TcpCheck(address, port)
-                };
+                    ConnectionFactory factory = new ConnectionFactory {Uri = new Uri(val)};
+
+                    using (var connection = factory.CreateConnection())
+                    {
+                        result.Result = connection.IsOpen;
+                    }
+                }
+                catch
+                {
+                    result.Result = false;
+                }
+                
+
+                return result;
             }
 
             throw new CheckFieldException(property.Name, value, "Invalid amqp connection string");
