@@ -1,10 +1,8 @@
-﻿using System;
+﻿using Lykke.SettingsReader.Checkers;
 
 namespace Lykke.SettingsReader.Attributes
 {
-    [AttributeUsage(AttributeTargets.Property)]
-    // ReSharper disable once InconsistentNaming
-    public class TcpCheckAttribute : Attribute
+    public class TcpCheckAttribute : BaseCheckAttribute
     {
         public TcpCheckAttribute(string port = null)
         {
@@ -19,6 +17,9 @@ namespace Lykke.SettingsReader.Attributes
         public string PortName { get; }
         public int Port { get; }
 
-        public bool IsPortProvided => !string.IsNullOrEmpty(PortName) || Port > 0;
+        public override ISettingsFieldChecker GetChecker()
+        {
+            return new TcpChecker(PortName, Port);
+        }
     }
 }
