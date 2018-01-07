@@ -133,7 +133,7 @@ namespace Lykke.SettingsReader.Test
 
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Invalid url", exception.Message);
+            Assert.Equal("Check of the 'ServiceUrl' field value [not_url_at_all] is failed: Invalid url", exception.Message);
         }
         
         [Fact]
@@ -151,7 +151,7 @@ namespace Lykke.SettingsReader.Test
         
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Invalid port", exception.Message);
+            Assert.Equal("Check of the 'HostPort' field value [127.0.0.1:zzz] is failed: Invalid port", exception.Message);
         }
         
         [Fact]
@@ -163,7 +163,7 @@ namespace Lykke.SettingsReader.Test
 
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Invalid port value in property 'Port'", exception.Message);
+            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Invalid port value in property 'Port'", exception.Message);
         }
         
         [Fact]
@@ -175,7 +175,7 @@ namespace Lykke.SettingsReader.Test
         
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Property 'ServicePort' not found", exception.Message);
+            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", exception.Message);
         }
         
         [Fact]
@@ -193,7 +193,7 @@ namespace Lykke.SettingsReader.Test
         
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Invalid port", exception.Message);
+            Assert.Equal("Check of the 'Rabbit' field value [amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz] is failed: Invalid port", exception.Message);
         }
         
         [Fact]
@@ -205,7 +205,7 @@ namespace Lykke.SettingsReader.Test
         
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Invalid amqp connection string", exception.Message);
+            Assert.Equal("Check of the 'Rabbit' field value [rabbit-registration.lykke-service.svc.cluster.local:5672] is failed: Invalid amqp connection string", exception.Message);
         }
     }
 }

@@ -140,7 +140,7 @@ namespace Lykke.SettingsReader
 
                 var checkResult = checker.CheckField(model, property, value);
 
-                result.AppendLine($"Checking '{checkResult.Url}' - {(checkResult.Result ? "OK" : "Failed")}");
+                result.AppendLine(checkResult.Description);
             }
 
             Console.WriteLine(result.ToString());

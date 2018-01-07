@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Extensions;
 using Lykke.SettingsReader.Helpers;
