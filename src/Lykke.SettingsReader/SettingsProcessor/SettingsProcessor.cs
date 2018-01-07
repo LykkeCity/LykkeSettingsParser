@@ -2,12 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Reflection;
-using System.Text;
-using Flurl;
-using Flurl.Http;
 using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
 
@@ -37,7 +32,11 @@ namespace Lykke.SettingsReader
 
             var result = FeelChildrenFields<T>(jsonObj);
 
-            ProcessChecks(result);
+            if (CheckPropertiesCount(result) > 0)
+            {
+                Console.WriteLine("Checking services");
+                ProcessChecks(result);
+            }
 
             return result;
         }
@@ -119,31 +118,63 @@ namespace Lykke.SettingsReader
             return $"{path}.{propertyName}".Trim('.');
         }
 
-        private static void ProcessChecks<T>(T model)
+        private static int CheckPropertiesCount<T>(T model)
         {
-            var result = new StringBuilder();
-            var properties = (from p in model.GetType().GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                where p.CanWrite && p.CanRead && Attribute.IsDefined(p, typeof(BaseCheckAttribute)) select p).ToList();
+            int count = 0;
 
-            if (!properties.Any())
-                return;
+            if (model == null)
+                return count;
 
-            Console.WriteLine("Checking services");
-
-            foreach (var property in properties)
+            Type objType = model.GetType();
+            PropertyInfo[] properties = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            
+            foreach (PropertyInfo property in properties)
             {
                 object value = property.GetValue(model);
-
                 var checkAttribute = (BaseCheckAttribute)property.GetCustomAttribute(typeof(BaseCheckAttribute));
 
-                var checker = checkAttribute.GetChecker();
-
-                var checkResult = checker.CheckField(model, property, value);
-
-                result.AppendLine(checkResult.Description);
+                if (checkAttribute != null)
+                {
+                    count++;
+                }
+                else if (property.PropertyType.IsClass && !property.PropertyType.IsValueType &&
+                         !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string)
+                         && property.PropertyType != typeof(object))
+                {
+                    count += CheckPropertiesCount(value);
+                }
             }
 
-            Console.WriteLine(result.ToString());
+            return count;
+        }
+
+        private static void ProcessChecks<T>(T model)
+        {
+            if (model == null)
+                return;
+
+            Type objType = model.GetType();
+            PropertyInfo[] properties = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            
+            foreach (PropertyInfo property in properties)
+            {
+                object value = property.GetValue(model);
+                var checkAttribute = (BaseCheckAttribute)property.GetCustomAttribute(typeof(BaseCheckAttribute));
+
+                if (checkAttribute != null)
+                {
+                    var checker = checkAttribute.GetChecker();
+
+                    var checkResult = checker.CheckField(model, property, value);
+                    Console.WriteLine(checkResult.Description);
+                }
+                else if (property.PropertyType.IsClass && !property.PropertyType.IsValueType &&
+                    !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string) 
+                         && property.PropertyType != typeof(object))
+                {
+                    ProcessChecks(value);
+                }
+            }
         }
     }
 }

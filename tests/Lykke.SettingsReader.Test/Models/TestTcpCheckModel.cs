@@ -4,8 +4,7 @@ namespace Lykke.SettingsReader.Test.Models
 {
     public class TestTcpCheckModel
     {
-        [TcpCheck]
-        public string HostPort { get; set; }
+        public Endpoint HostInfo { get; set; }
         [TcpCheck("Port")]
         public string Host { get; set; }
 
@@ -13,5 +12,11 @@ namespace Lykke.SettingsReader.Test.Models
 
         [TcpCheck(5672)]
         public string Server { get; set; }
+    }
+
+    public class Endpoint
+    {
+        [TcpCheck]
+        public string HostPort { get; set; }
     }
 }
