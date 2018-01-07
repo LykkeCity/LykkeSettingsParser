@@ -2,8 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
-
+using System.Text;
+using Flurl;
+using Flurl.Http;
+using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
 
 using Newtonsoft.Json;
@@ -31,6 +36,8 @@ namespace Lykke.SettingsReader
             }
 
             var result = FeelChildrenFields<T>(jsonObj);
+
+            ProcessChecks(result);
 
             return result;
         }
@@ -110,6 +117,33 @@ namespace Lykke.SettingsReader
         private static string ConcatPath(string path, string propertyName)
         {
             return $"{path}.{propertyName}".Trim('.');
+        }
+
+        private static void ProcessChecks<T>(T model)
+        {
+            var result = new StringBuilder();
+            var properties = (from p in model.GetType().GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                where p.CanWrite && p.CanRead && Attribute.IsDefined(p, typeof(BaseCheckAttribute)) select p).ToList();
+
+            if (!properties.Any())
+                return;
+
+            Console.WriteLine("Checking services");
+
+            foreach (var property in properties)
+            {
+                object value = property.GetValue(model);
+
+                var checkAttribute = (BaseCheckAttribute)property.GetCustomAttribute(typeof(BaseCheckAttribute));
+
+                var checker = checkAttribute.GetChecker();
+
+                var checkResult = checker.CheckField(model, property, value);
+
+                result.AppendLine(checkResult.Description);
+            }
+
+            Console.WriteLine(result.ToString());
         }
     }
 }
