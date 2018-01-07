@@ -23,7 +23,7 @@ namespace Lykke.SettingsReader.Checkers
 
                 try
                 {
-                    ConnectionFactory factory = new ConnectionFactory {Uri = new Uri(val)};
+                    ConnectionFactory factory = new ConnectionFactory {Uri = val};
 
                     using (var connection = factory.CreateConnection())
                     {
