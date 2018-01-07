@@ -138,8 +138,8 @@ namespace Lykke.SettingsReader
                     count++;
                 }
                 else if (property.PropertyType.IsClass && !property.PropertyType.IsValueType &&
-                         !property.PropertyType.IsPrimitive && property.PropertyType.FullName != typeof(string).FullName
-                         && property.PropertyType.FullName != typeof(object).FullName)
+                         !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string)
+                         && property.PropertyType != typeof(object))
                 {
                     count += CheckPropertiesCount(value);
                 }
@@ -169,8 +169,8 @@ namespace Lykke.SettingsReader
                     Console.WriteLine(checkResult.Description);
                 }
                 else if (property.PropertyType.IsClass && !property.PropertyType.IsValueType &&
-                    !property.PropertyType.IsPrimitive && property.PropertyType.FullName != typeof(string).FullName 
-                         && property.PropertyType.FullName != typeof(object).FullName)
+                    !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string) 
+                         && property.PropertyType != typeof(object))
                 {
                     ProcessChecks(value);
                 }
