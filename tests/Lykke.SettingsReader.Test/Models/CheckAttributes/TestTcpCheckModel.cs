@@ -1,10 +1,10 @@
 ﻿using Lykke.SettingsReader.Attributes;
 
-namespace Lykke.SettingsReader.Test.Models
+namespace Lykke.SettingsReader.Test.Models.CheckAttributes
 {
     public class TestTcpCheckModel
     {
-        public Endpoint HostInfo { get; set; }
+        public TestEndpoint HostInfo { get; set; }
         [TcpCheck("Port")]
         public string Host { get; set; }
 
@@ -12,11 +12,5 @@ namespace Lykke.SettingsReader.Test.Models
 
         [TcpCheck(5672)]
         public string Server { get; set; }
-    }
-
-    public class Endpoint
-    {
-        [TcpCheck]
-        public string HostPort { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Extensions;
@@ -18,53 +18,59 @@ namespace Lykke.SettingsReader.Checkers
             _port = port;
             _isPortProvided = !string.IsNullOrEmpty(_portName) || _port > 0;
         }
-        public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
+        public CheckFieldResult[] CheckField(object model, PropertyInfo property, object value)
         {
             string address;
             int port;
-            string val = value.ToString();
+            var result = new List<CheckFieldResult>();
+            string[] valuesToCheck = value is string[] strings ? strings : new []{ value.ToString() };
 
-            if (_isPortProvided)
+            foreach (string val in valuesToCheck)
             {
-                address = val;
-
-                if (string.IsNullOrEmpty(_portName))
+                if (_isPortProvided)
                 {
-                    port = _port;
-                }
-                else
-                {
-                    var portProperty = model.GetType().GetTypeInfo().GetProperty(_portName);
+                    address = val;
 
-                    if (portProperty == null)
-                        throw new CheckFieldException(property.Name, value, $"Property '{_portName}' not found");
+                    if (string.IsNullOrEmpty(_portName))
+                    {
+                        port = _port;
+                    }
+                    else
+                    {
+                        var portProperty = model.GetType().GetTypeInfo().GetProperty(_portName);
 
-                    var portValue = portProperty.GetValue(model).ToString();
+                        if (portProperty == null)
+                            throw new CheckFieldException(property.Name, val, $"Property '{_portName}' not found");
+
+                        var portValue = portProperty.GetValue(model).ToString();
                             
-                    if (!int.TryParse(portValue, out port))
-                        throw new CheckFieldException(property.Name, value, $"Invalid port value in property '{_portName}'");
-                }
-            }
-            else
-            {
-                if (val.SplitParts(':', 2, out var values))
-                {
-                    address = values[0];
-                    
-                    if (!int.TryParse(values[1], out port))
-                        throw new CheckFieldException(property.Name, value, "Invalid port");
+                        if (!int.TryParse(portValue, out port))
+                            throw new CheckFieldException(property.Name, val, $"Invalid port value in property '{_portName}'");
+                    }
                 }
                 else
                 {
-                    throw new CheckFieldException(property.Name, value, "Invalid address");
+                    if (val.SplitParts(':', 2, out var values))
+                    {
+                        address = values[0];
+                    
+                        if (!int.TryParse(values[1], out port))
+                            throw new CheckFieldException(property.Name, val, "Invalid port");
+                    }
+                    else
+                    {
+                        throw new CheckFieldException(property.Name, val, "Invalid address");
+                    }
                 }
+
+                result.Add(new CheckFieldResult
+                {
+                    Url = $"{address}:{port}",
+                    Result = TcpHelper.TcpCheck(address, port)
+                });
             }
 
-            return new CheckFieldResult
-            {
-                Url = $"{address}:{port}",
-                Result = TcpHelper.TcpCheck(address, port)
-            };
+            return result.ToArray();
         }
     }
 }

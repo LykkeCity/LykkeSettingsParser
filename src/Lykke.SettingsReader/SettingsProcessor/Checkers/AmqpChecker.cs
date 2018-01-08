@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Extensions;
@@ -8,38 +9,46 @@ namespace Lykke.SettingsReader.Checkers
 {
     public class AmqpChecker : ISettingsFieldChecker
     {
-        public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
+        public CheckFieldResult[] CheckField(object model, PropertyInfo property, object value)
         {
-            var val = value.ToString();
+            var result = new List<CheckFieldResult>();
+            string[] valuesToCheck = value is string[] strings ? strings : new []{ value.ToString() };
 
-            if (val.SplitParts('@', 2, out var values) && values[1].SplitParts(':', 2, out var amqpValues))
+            foreach (string val in valuesToCheck)
             {
-                string address = amqpValues[0];
-
-                if (!int.TryParse(amqpValues[1], out var port))
-                    throw new CheckFieldException(property.Name, value, "Invalid port");
-
-                var result = new CheckFieldResult {Url = $"{address}:{port}"};
-
-                try
+                if (val.SplitParts('@', 2, out var values) && values[1].SplitParts(':', 2, out var amqpValues))
                 {
-                    ConnectionFactory factory = new ConnectionFactory {Uri = val};
+                    string address = amqpValues[0];
 
-                    using (var connection = factory.CreateConnection())
+                    if (!int.TryParse(amqpValues[1], out var port))
+                        throw new CheckFieldException(property.Name, val, "Invalid port");
+
+                    var checkResult = new CheckFieldResult {Url = $"{address}:{port}"};
+
+                    try
                     {
-                        result.Result = connection.IsOpen;
+                        ConnectionFactory factory = new ConnectionFactory {Uri = val};
+
+                        using (var connection = factory.CreateConnection())
+                        {
+                            checkResult.Result = connection.IsOpen;
+                        }
                     }
-                }
-                catch
-                {
-                    result.Result = false;
-                }
+                    catch
+                    {
+                        checkResult.Result = false;
+                    }
                 
 
-                return result;
+                    result.Add(checkResult);
+                }
+                else
+                {
+                    throw new CheckFieldException(property.Name, val, "Invalid amqp connection string");
+                }
             }
 
-            throw new CheckFieldException(property.Name, value, "Invalid amqp connection string");
+            return result.ToArray();
         }
     }
 }

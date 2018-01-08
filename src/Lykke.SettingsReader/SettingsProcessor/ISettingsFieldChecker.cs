@@ -4,6 +4,6 @@ namespace Lykke.SettingsReader
 {
     public interface ISettingsFieldChecker
     {
-        CheckFieldResult CheckField(object model, PropertyInfo property, object value);
+        CheckFieldResult[] CheckField(object model, PropertyInfo property, object value);
     }
 }

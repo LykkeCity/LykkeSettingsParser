@@ -1,17 +1,11 @@
 ﻿using Lykke.SettingsReader.Attributes;
 
-namespace Lykke.SettingsReader.Test.Models
+namespace Lykke.SettingsReader.Test.Models.CheckAttributes
 {
     public class TestAmqpCheckModel
     {
         [AmqpCheck]
         public string ConnStr { get; set; }
         public RabbitMq Rabbit { get; set; }
-    }
-
-    public class RabbitMq
-    {
-        [AmqpCheck]
-        public string ConnString { get; set; }
     }
 }

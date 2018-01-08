@@ -1,9 +1,9 @@
 using System;
+using System.IO;
 using System.Linq;
-
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Test.Models;
-
+using Lykke.SettingsReader.Test.Models.CheckAttributes;
 using Xunit;
 
 namespace Lykke.SettingsReader.Test
@@ -121,9 +121,48 @@ namespace Lykke.SettingsReader.Test
         [Fact]
         public void HttpCheckAttribute_IsOk()
         {
-            SettingsProcessor.Process<TestHttpCheckModel>("{'Service': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}, 'Url': 'http://assets.lykke-service.svc.cluster.local/', 'Port':5672, 'Num': 1234}");
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestHttpCheckModel>(
+                    "{'Service': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}, 'Url': 'http://assets.lykke-service.svc.cluster.local/', 'Port':5672, 'Num': 1234}");
+            });
+
+            Assert.Equal(4, linesCount);
+        }
+
+        [Fact]
+        public void HttpCheckAttribute_IsArrayOk()
+        {
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestHttpCheckArrayModel>("{'Services': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}, {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}]}");
+            });
+
+            Assert.Equal(4, linesCount);
         }
         
+        [Fact]
+        public void HttpCheckAttribute_IsListOk()
+        {
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestHttpCheckListModel>("{'Services': ['http://assets.lykke-service.svc.cluster.local', 'http://assets.lykke-service.svc.cluster.local']}");
+            });
+
+            Assert.Equal(4, linesCount);
+        }
+        
+        [Fact]
+        public void HttpCheckAttribute_IsDictionaryOk()
+        {
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestHttpCheckDictioinaryModel>("{'Services': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}, 'second': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}}");
+            });
+
+            Assert.Equal(4, linesCount);
+        }
+
         [Fact]
         public void HttpCheckAttribute_IsInvalidUrl()
         {
@@ -139,7 +178,45 @@ namespace Lykke.SettingsReader.Test
         [Fact]
         public void TcpCheckAttribute_IsOk()
         {
-            SettingsProcessor.Process<TestTcpCheckModel>("{'HostInfo': {'HostPort': '127.0.0.1:5672'}, 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}");
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestTcpCheckModel>("{'HostInfo': {'HostPort': '127.0.0.1:5672'}, 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}");
+            });
+
+            Assert.Equal(5, linesCount);
+        }
+        
+        [Fact]
+        public void TcpCheckAttribute_IsArrayOk()
+        {
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestTcpCheckArrayModel>("{'Endpoints': [{'HostPort': '127.0.0.1:5672'}, {'HostPort': '127.0.0.1:5672'}]}");
+            });
+
+            Assert.Equal(4, linesCount);
+        }
+        
+        [Fact]
+        public void TcpCheckAttribute_IsListOk()
+        {
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestTcpCheckListModel>("{'Hosts': ['127.0.0.1:5672', '127.0.0.1:5672']}");
+            });
+
+            Assert.Equal(4, linesCount);
+        }
+        
+        [Fact]
+        public void TcpCheckAttribute_IsDictionaryOk()
+        {
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestTcpCheckDictionaryModel>("{'Endpoints': {'first': {'HostPort': '127.0.0.1:5672'}, 'second': {'HostPort': '127.0.0.1:5672'}}}");
+            });
+
+            Assert.Equal(4, linesCount);
         }
         
         [Fact]
@@ -181,7 +258,45 @@ namespace Lykke.SettingsReader.Test
         [Fact]
         public void AmqpCheckAttribute_IsOk()
         {
-            SettingsProcessor.Process<TestAmqpCheckModel>("{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:5672'}}");
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestAmqpCheckModel>("{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:5672'}}");
+            });
+
+            Assert.Equal(4, linesCount);
+        }
+
+        [Fact]
+        public void AmqpCheckAttribute_IsArrayOk()
+        {
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestAmqpCheckArrayModel>("{'Rabbits': [{'ConnString': 'amqp://guest:guest@localhost:5672'}, {'ConnString': 'amqp://guest:guest@localhost:5672'}]}");
+            });
+
+            Assert.Equal(4, linesCount);
+        }
+        
+        [Fact]
+        public void AmqpCheckAttribute_IsListOk()
+        {
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestAmqpCheckListModel>("{'Rabbits': ['amqp://guest:guest@localhost:5672', 'amqp://guest:guest@localhost:5672']}");
+            });
+
+            Assert.Equal(4, linesCount);
+        }
+        
+        [Fact]
+        public void AmqpCheckAttribute_IsDictionaryOk()
+        {
+            int linesCount = GetConsoleLinesCount(() =>
+            {
+                SettingsProcessor.Process<TestAmqpCheckDictionaryModel>("{'Rabbits': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}, 'second': {'ConnString': 'amqp://guest:guest@localhost:5672'}}}");
+            });
+
+            Assert.Equal(4, linesCount);
         }
         
         [Fact]
@@ -206,6 +321,20 @@ namespace Lykke.SettingsReader.Test
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'ConnString' field value [rabbit-registration.lykke-service.svc.cluster.local:5672] is failed: Invalid amqp connection string", exception.Message);
+        }
+
+        private int GetConsoleLinesCount(Action action)
+        {
+            using (StringWriter sw = new StringWriter())
+            {
+                var consoleOut = Console.Out;
+                Console.SetOut(sw);
+                action.Invoke();
+                var linesCount = sw.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length;
+                Console.SetOut(consoleOut);
+                return linesCount;
+            }
+            
         }
     }
 }
