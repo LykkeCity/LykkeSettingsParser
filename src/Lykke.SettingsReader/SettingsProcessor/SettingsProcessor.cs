@@ -32,11 +32,9 @@ namespace Lykke.SettingsReader
 
             var result = FeelChildrenFields<T>(jsonObj);
 
-            if (CheckPropertiesCount(result) > 0)
-            {
-                Console.WriteLine("Checking services");
-                ProcessChecks(result);
-            }
+            Console.WriteLine("Checking services");
+            ProcessChecks(result);
+            Console.WriteLine("Checking services - Done.");
 
             return result;
         }
@@ -118,43 +116,14 @@ namespace Lykke.SettingsReader
             return $"{path}.{propertyName}".Trim('.');
         }
 
-        private static int CheckPropertiesCount<T>(T model)
-        {
-            int count = 0;
-
-            if (model == null)
-                return count;
-
-            Type objType = model.GetType();
-            PropertyInfo[] properties = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            
-            foreach (PropertyInfo property in properties)
-            {
-                object value = property.GetValue(model);
-                var checkAttribute = (BaseCheckAttribute)property.GetCustomAttribute(typeof(BaseCheckAttribute));
-
-                if (checkAttribute != null)
-                {
-                    count++;
-                }
-                else if (property.PropertyType.IsClass && !property.PropertyType.IsValueType &&
-                         !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string)
-                         && property.PropertyType != typeof(object))
-                {
-                    count += CheckPropertiesCount(value);
-                }
-            }
-
-            return count;
-        }
-
         private static void ProcessChecks<T>(T model)
         {
             if (model == null)
                 return;
 
             Type objType = model.GetType();
-            PropertyInfo[] properties = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] properties = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => !p.GetIndexParameters().Any()).ToArray();
             
             foreach (PropertyInfo property in properties)
             {
@@ -164,16 +133,96 @@ namespace Lykke.SettingsReader
                 if (checkAttribute != null)
                 {
                     var checker = checkAttribute.GetChecker();
+                    string[] valuesToCheck = Array.Empty<string>();
+                        
+                    switch (value)
+                    {
+                        case IReadOnlyList<string> strings:
+                            valuesToCheck = strings.ToArray();
+                            break;
+                        case string str:
+                            valuesToCheck = new[] {str};
+                            break;
+                    }
 
-                    var checkResult = checker.CheckField(model, property, value);
-                    Console.WriteLine(checkResult.Description);
+                    foreach (string val in valuesToCheck)
+                    {
+                        var checkResult = checker.CheckField(model, property, val);
+                        Console.WriteLine(checkResult.Description);
+                    }
                 }
-                else if (property.PropertyType.IsClass && !property.PropertyType.IsValueType &&
-                    !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string) 
-                         && property.PropertyType != typeof(object))
+                else
                 {
-                    ProcessChecks(value);
+                    object[] values = GetValuesToCheck(property, model);
+
+                    foreach (object val in values)
+                        ProcessChecks(val);
                 }
+            }
+        }
+
+        private static object[] GetValuesToCheck<T>(PropertyInfo property, T model)
+        {
+            var values = new List<object>();
+
+            var getMethod = property.GetGetMethod();
+                
+            if (getMethod.ReturnType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(getMethod.ReturnType))
+            {
+                var arrayObject = getMethod.Invoke(model, null);
+                foreach (object element in (IEnumerable) arrayObject)
+                {
+                    values.Add(element);
+                }
+            }
+            else
+            if (getMethod.ReturnType != typeof(string) && GetGenericArgumentsOfAssignableType(getMethod.ReturnType, typeof(IReadOnlyDictionary<,>)).Any())
+            {
+                var dictObject = (IDictionary)getMethod.Invoke(model, null);
+                foreach (object key in dictObject.Keys)
+                {
+                    values.Add(dictObject[key]);
+                }
+            }
+            else
+            {
+                if (property.PropertyType.IsClass && !property.PropertyType.IsValueType &&
+                    !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string) 
+                    && property.PropertyType != typeof(object))
+                {
+                    values.Add(property.GetValue(model));
+                }
+            }
+
+            return values.ToArray();
+        }
+
+        private static IReadOnlyList<Type> GetGenericArgumentsOfAssignableType(Type givenType, Type genericType)
+        {
+            while (true)
+            {
+                if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
+                {
+                    return givenType.GenericTypeArguments;
+                }
+
+                var interfaceTypes = givenType.GetInterfaces();
+
+                foreach (var it in interfaceTypes)
+                {
+                    if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
+                    {
+                        return it.GetGenericArguments();
+                    }
+                }
+
+                var baseType = givenType.BaseType;
+                if (baseType == null)
+                {
+                    return Array.Empty<Type>();
+                }
+
+                givenType = baseType;
             }
         }
     }

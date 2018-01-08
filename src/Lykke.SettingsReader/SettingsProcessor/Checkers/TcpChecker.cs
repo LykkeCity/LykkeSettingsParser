@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Extensions;
 using Lykke.SettingsReader.Helpers;
@@ -37,12 +36,12 @@ namespace Lykke.SettingsReader.Checkers
                     var portProperty = model.GetType().GetTypeInfo().GetProperty(_portName);
 
                     if (portProperty == null)
-                        throw new CheckFieldException(property.Name, value, $"Property '{_portName}' not found");
+                        throw new CheckFieldException(property.Name, val, $"Property '{_portName}' not found");
 
                     var portValue = portProperty.GetValue(model).ToString();
                             
                     if (!int.TryParse(portValue, out port))
-                        throw new CheckFieldException(property.Name, value, $"Invalid port value in property '{_portName}'");
+                        throw new CheckFieldException(property.Name, val, $"Invalid port value in property '{_portName}'");
                 }
             }
             else
@@ -52,11 +51,11 @@ namespace Lykke.SettingsReader.Checkers
                     address = values[0];
                     
                     if (!int.TryParse(values[1], out port))
-                        throw new CheckFieldException(property.Name, value, "Invalid port");
+                        throw new CheckFieldException(property.Name, val, "Invalid port");
                 }
                 else
                 {
-                    throw new CheckFieldException(property.Name, value, "Invalid address");
+                    throw new CheckFieldException(property.Name, val, "Invalid address");
                 }
             }
 

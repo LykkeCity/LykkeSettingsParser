@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Extensions;
 using RabbitMQ.Client;
@@ -10,16 +9,16 @@ namespace Lykke.SettingsReader.Checkers
     {
         public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
         {
-            var val = value.ToString();
+            string val = value.ToString();
 
             if (val.SplitParts('@', 2, out var values) && values[1].SplitParts(':', 2, out var amqpValues))
             {
                 string address = amqpValues[0];
 
                 if (!int.TryParse(amqpValues[1], out var port))
-                    throw new CheckFieldException(property.Name, value, "Invalid port");
+                    throw new CheckFieldException(property.Name, val, "Invalid port");
 
-                var result = new CheckFieldResult {Url = $"{address}:{port}"};
+                var checkResult = new CheckFieldResult {Url = $"{address}:{port}"};
 
                 try
                 {
@@ -27,19 +26,18 @@ namespace Lykke.SettingsReader.Checkers
 
                     using (var connection = factory.CreateConnection())
                     {
-                        result.Result = connection.IsOpen;
+                        checkResult.Result = connection.IsOpen;
                     }
                 }
                 catch
                 {
-                    result.Result = false;
+                    checkResult.Result = false;
                 }
                 
-
-                return result;
+                return checkResult;
             }
 
-            throw new CheckFieldException(property.Name, value, "Invalid amqp connection string");
+            throw new CheckFieldException(property.Name, val, "Invalid amqp connection string");
         }
     }
 }
