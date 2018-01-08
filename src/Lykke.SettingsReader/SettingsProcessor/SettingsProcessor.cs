@@ -170,18 +170,26 @@ namespace Lykke.SettingsReader
             if (getMethod.ReturnType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(getMethod.ReturnType))
             {
                 var arrayObject = getMethod.Invoke(model, null);
-                foreach (object element in (IEnumerable) arrayObject)
+
+                if (arrayObject != null)
                 {
-                    values.Add(element);
+                    foreach (object element in (IEnumerable) arrayObject)
+                    {
+                        values.Add(element);
+                    }
                 }
             }
             else
             if (getMethod.ReturnType != typeof(string) && GetGenericArgumentsOfAssignableType(getMethod.ReturnType, typeof(IReadOnlyDictionary<,>)).Any())
             {
                 var dictObject = (IDictionary)getMethod.Invoke(model, null);
-                foreach (object key in dictObject.Keys)
+                
+                if (dictObject != null)
                 {
-                    values.Add(dictObject[key]);
+                    foreach (object key in dictObject.Keys)
+                    {
+                        values.Add(dictObject[key]);
+                    }
                 }
             }
             else
