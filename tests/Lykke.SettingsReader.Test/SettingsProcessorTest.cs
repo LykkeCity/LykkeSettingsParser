@@ -135,10 +135,15 @@ namespace Lykke.SettingsReader.Test
         {
             int linesCount = GetConsoleLinesCount(() =>
             {
-                SettingsProcessor.Process<TestHttpCheckArrayModel>("{'Services': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}, {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}]}");
+                SettingsProcessor.Process<TestHttpCheckArrayModel>("{'Services': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
+                                                                   "'List': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
+                                                                   "'IList': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
+                                                                   "'RoList': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
+                                                                   "'RoCollection': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
+                                                                   "'Enumerable': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}]}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Equal(8, linesCount);
         }
         
         [Fact]
@@ -146,10 +151,15 @@ namespace Lykke.SettingsReader.Test
         {
             int linesCount = GetConsoleLinesCount(() =>
             {
-                SettingsProcessor.Process<TestHttpCheckListModel>("{'Services': ['http://assets.lykke-service.svc.cluster.local', 'http://assets.lykke-service.svc.cluster.local']}");
+                SettingsProcessor.Process<TestHttpCheckListModel>("{'Services': ['http://assets.lykke-service.svc.cluster.local']," +
+                                                                  "'List': ['http://assets.lykke-service.svc.cluster.local']," +
+                                                                  "'IList': ['http://assets.lykke-service.svc.cluster.local']," +
+                                                                  "'RoList': ['http://assets.lykke-service.svc.cluster.local']," +
+                                                                  "'RoCollection': ['http://assets.lykke-service.svc.cluster.local']," +
+                                                                  "'Enumerable': ['http://assets.lykke-service.svc.cluster.local']}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Equal(8, linesCount);
         }
         
         [Fact]
@@ -157,10 +167,12 @@ namespace Lykke.SettingsReader.Test
         {
             int linesCount = GetConsoleLinesCount(() =>
             {
-                SettingsProcessor.Process<TestHttpCheckDictioinaryModel>("{'Services': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}, 'second': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}}");
+                SettingsProcessor.Process<TestHttpCheckDictioinaryModel>("{'Services': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}," +
+                                                                         "'IDict': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}," +
+                                                                         "'RoDict': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Equal(5, linesCount);
         }
 
         [Fact]
@@ -191,10 +203,15 @@ namespace Lykke.SettingsReader.Test
         {
             int linesCount = GetConsoleLinesCount(() =>
             {
-                SettingsProcessor.Process<TestTcpCheckArrayModel>("{'Endpoints': [{'HostPort': '127.0.0.1:5672'}, {'HostPort': '127.0.0.1:5672'}]}");
+                SettingsProcessor.Process<TestTcpCheckArrayModel>("{'Endpoints': [{'HostPort': '127.0.0.1:5672'}]," +
+                                                                  "'List': [{'HostPort': '127.0.0.1:5672'}]," +
+                                                                  "'IList': [{'HostPort': '127.0.0.1:5672'}]," +
+                                                                  "'RoList': [{'HostPort': '127.0.0.1:5672'}]," +
+                                                                  "'RoCollection': [{'HostPort': '127.0.0.1:5672'}]," +
+                                                                  "'Enumerable': [{'HostPort': '127.0.0.1:5672'}]}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Equal(8, linesCount);
         }
         
         [Fact]
@@ -202,10 +219,15 @@ namespace Lykke.SettingsReader.Test
         {
             int linesCount = GetConsoleLinesCount(() =>
             {
-                SettingsProcessor.Process<TestTcpCheckListModel>("{'Hosts': ['127.0.0.1:5672', '127.0.0.1:5672']}");
+                SettingsProcessor.Process<TestTcpCheckListModel>("{'Hosts': ['127.0.0.1:5672']," +
+                                                                 "'List': ['127.0.0.1:5672']," +
+                                                                 "'IList': ['127.0.0.1:5672']," +
+                                                                 "'RoList': ['127.0.0.1:5672']," +
+                                                                 "'RoCollection': ['127.0.0.1:5672']," +
+                                                                 "'Enumerable': ['127.0.0.1:5672']}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Equal(8, linesCount);
         }
         
         [Fact]
@@ -213,10 +235,12 @@ namespace Lykke.SettingsReader.Test
         {
             int linesCount = GetConsoleLinesCount(() =>
             {
-                SettingsProcessor.Process<TestTcpCheckDictionaryModel>("{'Endpoints': {'first': {'HostPort': '127.0.0.1:5672'}, 'second': {'HostPort': '127.0.0.1:5672'}}}");
+                SettingsProcessor.Process<TestTcpCheckDictionaryModel>("{'Endpoints': {'first': {'HostPort': '127.0.0.1:5672'}}," +
+                                                                       "'IDict': {'first': {'HostPort': '127.0.0.1:5672'}}," +
+                                                                       "'RoDict': {'first': {'HostPort': '127.0.0.1:5672'}}}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Equal(5, linesCount);
         }
         
         [Fact]
@@ -271,10 +295,15 @@ namespace Lykke.SettingsReader.Test
         {
             int linesCount = GetConsoleLinesCount(() =>
             {
-                SettingsProcessor.Process<TestAmqpCheckArrayModel>("{'Rabbits': [{'ConnString': 'amqp://guest:guest@localhost:5672'}, {'ConnString': 'amqp://guest:guest@localhost:5672'}]}");
+                SettingsProcessor.Process<TestAmqpCheckArrayModel>("{'Rabbits': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
+                                                                   "'List': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
+                                                                   "'IList': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
+                                                                   "'RoList': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
+                                                                   "'RoCollection': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
+                                                                   "'Enumerable': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Equal(8, linesCount);
         }
         
         [Fact]
@@ -282,10 +311,15 @@ namespace Lykke.SettingsReader.Test
         {
             int linesCount = GetConsoleLinesCount(() =>
             {
-                SettingsProcessor.Process<TestAmqpCheckListModel>("{'Rabbits': ['amqp://guest:guest@localhost:5672', 'amqp://guest:guest@localhost:5672']}");
+                SettingsProcessor.Process<TestAmqpCheckListModel>("{'Rabbits': ['amqp://guest:guest@localhost:5672']," +
+                                                                  "'List': ['amqp://guest:guest@localhost:5672']," +
+                                                                  "'IList': ['amqp://guest:guest@localhost:5672']," +
+                                                                  "'RoList': ['amqp://guest:guest@localhost:5672']," +
+                                                                  "'RoCollection': ['amqp://guest:guest@localhost:5672']," +
+                                                                  "'Enumerable': ['amqp://guest:guest@localhost:5672']}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Equal(8, linesCount);
         }
         
         [Fact]
@@ -293,10 +327,12 @@ namespace Lykke.SettingsReader.Test
         {
             int linesCount = GetConsoleLinesCount(() =>
             {
-                SettingsProcessor.Process<TestAmqpCheckDictionaryModel>("{'Rabbits': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}, 'second': {'ConnString': 'amqp://guest:guest@localhost:5672'}}}");
+                SettingsProcessor.Process<TestAmqpCheckDictionaryModel>("{'Rabbits': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}," +
+                                                                        "'IDict': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}," +
+                                                                        "'RoDict': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Equal(5, linesCount);
         }
         
         [Fact]

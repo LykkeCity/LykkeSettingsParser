@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using Flurl;
 using Flurl.Http;
 using Lykke.SettingsReader.Exceptions;
@@ -15,35 +14,29 @@ namespace Lykke.SettingsReader.Checkers
             _path = path;
         }
 
-        public CheckFieldResult[] CheckField(object model, PropertyInfo property, object value)
+        public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
         {
-            var result = new List<CheckFieldResult>();
-            string[] valuesToCheck = value is string[] strings ? strings : new []{ value.ToString() };
+            string val = value.ToString();
 
-            foreach (string val in valuesToCheck)
+            var checkResult = new CheckFieldResult
             {
-                var checkResult = new CheckFieldResult
-                {
-                    Url = Url.Combine(val, _path)
-                };
-                    
-                if (!Url.IsValid(checkResult.Url))
-                    throw new CheckFieldException(property.Name, val, "Invalid url");
+                Url = Url.Combine(val, _path)
+            };
 
-                try
-                {
-                    var resp = checkResult.Url.GetAsync().Result;
-                    checkResult.Result = resp.IsSuccessStatusCode;
-                }
-                catch
-                {
-                    checkResult.Result = false;
-                }
+            if (!Url.IsValid(checkResult.Url))
+                throw new CheckFieldException(property.Name, val, "Invalid url");
 
-                result.Add(checkResult);
+            try
+            {
+                var resp = checkResult.Url.GetAsync().Result;
+                checkResult.Result = resp.IsSuccessStatusCode;
+            }
+            catch
+            {
+                checkResult.Result = false;
             }
 
-            return result.ToArray();
+            return checkResult;
         }
     }
 }

@@ -133,11 +133,23 @@ namespace Lykke.SettingsReader
                 if (checkAttribute != null)
                 {
                     var checker = checkAttribute.GetChecker();
+                    string[] valuesToCheck = Array.Empty<string>();
+                        
+                    switch (value)
+                    {
+                        case IReadOnlyList<string> strings:
+                            valuesToCheck = strings.ToArray();
+                            break;
+                        case string str:
+                            valuesToCheck = new[] {str};
+                            break;
+                    }
 
-                    var checkResult = checker.CheckField(model, property, value);
-                    
-                    foreach (var res in checkResult)
-                        Console.WriteLine(res.Description);
+                    foreach (string val in valuesToCheck)
+                    {
+                        var checkResult = checker.CheckField(model, property, val);
+                        Console.WriteLine(checkResult.Description);
+                    }
                 }
                 else
                 {
@@ -155,10 +167,10 @@ namespace Lykke.SettingsReader
 
             var getMethod = property.GetGetMethod();
                 
-            if (getMethod.ReturnType.IsArray)
+            if (getMethod.ReturnType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(getMethod.ReturnType))
             {
                 var arrayObject = getMethod.Invoke(model, null);
-                foreach (object element in (Array) arrayObject)
+                foreach (object element in (IEnumerable) arrayObject)
                 {
                     values.Add(element);
                 }
