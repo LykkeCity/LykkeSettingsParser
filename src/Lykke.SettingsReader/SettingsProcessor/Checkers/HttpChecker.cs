@@ -1,6 +1,6 @@
-﻿using System.Reflection;
-using Flurl;
-using Flurl.Http;
+﻿using System;
+using System.Net.Http;
+using System.Reflection;
 using Lykke.SettingsReader.Exceptions;
 
 namespace Lykke.SettingsReader.Checkers
@@ -18,25 +18,25 @@ namespace Lykke.SettingsReader.Checkers
         {
             string val = value.ToString();
 
-            var checkResult = new CheckFieldResult
-            {
-                Url = Url.Combine(val, _path)
-            };
-
-            if (!Url.IsValid(checkResult.Url))
-                throw new CheckFieldException(property.Name, val, "Invalid url");
-
             try
             {
-                var resp = checkResult.Url.GetAsync().Result;
-                checkResult.Result = resp.IsSuccessStatusCode;
-            }
-            catch
-            {
-                checkResult.Result = false;
-            }
+                string url = new Uri(new Uri(val), _path).ToString();
+                HttpResponseMessage response = HttpCheckerClient.Instance.GetAsync(url).GetAwaiter().GetResult();
 
-            return checkResult;
+                return new CheckFieldResult
+                {
+                    Url = url,
+                    Result = response.IsSuccessStatusCode
+                };
+            }
+            catch(UriFormatException)
+            {
+                throw new CheckFieldException(property.Name, val, "Invalid url");
+            }
+            catch(Exception)
+            {
+                return new CheckFieldResult{Result = false};
+            }
         }
     }
 }
