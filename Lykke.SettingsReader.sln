@@ -1,11 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.SettingsReader.Test", "tests\Lykke.SettingsReader.Test\Lykke.SettingsReader.Test.csproj", "{3FA8C2EA-3261-4458-A4C0-F0926C936600}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lykke.SettingsReader.Test", "tests\Lykke.SettingsReader.Test\Lykke.SettingsReader.Test.csproj", "{3FA8C2EA-3261-4458-A4C0-F0926C936600}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.SettingsReader", "src\Lykke.SettingsReader\Lykke.SettingsReader.csproj", "{1B4D9947-00D8-4F53-A97C-A7648838D573}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lykke.SettingsReader", "src\Lykke.SettingsReader\Lykke.SettingsReader.csproj", "{1B4D9947-00D8-4F53-A97C-A7648838D573}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{BE4F6AAB-F121-416B-B04A-3162FEE6B918}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +29,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E19361F3-B8EA-4C90-B31C-78F27F872F6D}
 	EndGlobalSection
 EndGlobal
