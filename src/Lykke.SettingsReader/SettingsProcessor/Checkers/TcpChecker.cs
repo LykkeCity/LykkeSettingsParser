@@ -17,6 +17,7 @@ namespace Lykke.SettingsReader.Checkers
             _port = port;
             _isPortProvided = !string.IsNullOrEmpty(_portName) || _port > 0;
         }
+
         public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
         {
             string address;
@@ -59,11 +60,12 @@ namespace Lykke.SettingsReader.Checkers
                 }
             }
 
-            return new CheckFieldResult
-            {
-                Url = $"{address}:{port}",
-                Result = TcpHelper.TcpCheck(address, port)
-            };
+            string url = $"{address}:{port}";
+            bool checkResult = TcpHelper.TcpCheck(address, port);
+
+            return checkResult
+                ? CheckFieldResult.Ok(url)
+                : CheckFieldResult.Failed(url);
         }
     }
 }

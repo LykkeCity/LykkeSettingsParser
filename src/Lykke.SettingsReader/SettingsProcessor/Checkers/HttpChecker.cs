@@ -17,25 +17,36 @@ namespace Lykke.SettingsReader.Checkers
         public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
         {
             string val = value.ToString();
+            string url = GetFullUrl(val);
+            bool checkResult;
+
+            if (string.IsNullOrEmpty(url))
+                throw new CheckFieldException(property.Name, val, "Invalid url");
 
             try
             {
-                string url = new Uri(new Uri(val), _path).ToString();
                 HttpResponseMessage response = HttpCheckerClient.Instance.GetAsync(url).GetAwaiter().GetResult();
-
-                return new CheckFieldResult
-                {
-                    Url = url,
-                    Result = response.IsSuccessStatusCode
-                };
-            }
-            catch(UriFormatException)
-            {
-                throw new CheckFieldException(property.Name, val, "Invalid url");
+                checkResult = response.IsSuccessStatusCode;
             }
             catch(Exception)
             {
-                return new CheckFieldResult{Result = false};
+                checkResult = false;
+            }
+
+            return checkResult
+                ? CheckFieldResult.Ok(url)
+                : CheckFieldResult.Failed(url);
+        }
+
+        private string GetFullUrl(string url)
+        {
+            try
+            {
+                return new Uri(new Uri(url), _path).ToString();
+            }
+            catch(Exception)
+            {
+                return string.Empty;
             }
         }
     }
