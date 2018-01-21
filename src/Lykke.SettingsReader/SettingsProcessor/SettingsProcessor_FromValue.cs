@@ -14,9 +14,9 @@ namespace Lykke.SettingsReader
             { typeof(TimeSpan), x => TimeSpan.Parse(string.Format(CultureInfo.InvariantCulture, $"{x}"), CultureInfo.InvariantCulture) },
             { typeof(Guid), x => Guid.Parse(x.ToString())},
             { typeof(DateTime), x => DateTime.Parse(x.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) },
-            { typeof(decimal), x => x is string ? decimal.Parse((string)x, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(decimal))},
-            { typeof(double), x =>  x is string ? double.Parse((string)x, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(double))},
-            { typeof(float), x =>  x is string ?  float.Parse((string)x, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(float))},
+            { typeof(decimal), x => x is string ? decimal.Parse((string)x, NumberStyles.Any, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(decimal))},
+            { typeof(double), x =>  x is string ? double.Parse((string)x, NumberStyles.Any, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(double))},
+            { typeof(float), x =>  x is string ?  float.Parse((string)x, NumberStyles.Any, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(float))},
             { typeof(int), x =>  x is string ?  int.Parse((string)x, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(int))},
             { typeof(long), x =>  x is string ?  long.Parse((string)x, CultureInfo.InvariantCulture) : System.Convert.ChangeType(x, typeof(long))}
         };

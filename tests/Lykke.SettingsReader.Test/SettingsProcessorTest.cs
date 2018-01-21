@@ -119,6 +119,36 @@ namespace Lykke.SettingsReader.Test
         }
 
         [Fact]
+        public void Test_NegativeNumbersAsStrings_IsOk()
+        {
+            string json = "{'Int': '-1234', " +
+                          "'Double': '-10.4', " +
+                          "'Float': '-10.4', " +
+                          "'Decimal': '-10.2'}";
+
+            var model = SettingsProcessor.Process<TestConvert>(json);
+            Assert.Equal(-1234, model.Int);
+            Assert.Equal(-10.4, Math.Round(model.Double, 2));
+            Assert.Equal(-10.4, Math.Round(model.Float, 2));
+            Assert.Equal((decimal)-10.2, model.Decimal);
+        }
+        
+        [Fact]
+        public void Test_NegativeNumbers_IsOk()
+        {
+            string json = "{'Int': -1234, " +
+                          "'Double': -10.4, " +
+                          "'Float': -10.4, " +
+                          "'Decimal': -10.2}";
+
+            var model = SettingsProcessor.Process<TestConvert>(json);
+            Assert.Equal(-1234, model.Int);
+            Assert.Equal(-10.4, Math.Round(model.Double, 2));
+            Assert.Equal(-10.4, Math.Round(model.Float, 2));
+            Assert.Equal((decimal)-10.2, model.Decimal);
+        }
+
+        [Fact]
         public void HttpCheckAttribute_IsOk()
         {
             int linesCount = GetConsoleLinesCount(() =>
