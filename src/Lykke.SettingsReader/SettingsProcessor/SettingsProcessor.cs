@@ -134,7 +134,6 @@ namespace Lykke.SettingsReader
                 {
                     var checker = checkAttribute.GetChecker();
                     string[] valuesToCheck = Array.Empty<string>();
-                        
                     switch (value)
                     {
                         case IReadOnlyList<string> strings:
@@ -147,11 +146,14 @@ namespace Lykke.SettingsReader
 
                     foreach (string val in valuesToCheck)
                     {
-                        if (val == null)
-                            throw new CheckFieldException(property.Name, value, "Setting can not be null");
-
                         if (string.IsNullOrWhiteSpace(val))
-                            throw new CheckFieldException(property.Name, value, "Empty setting value");
+                        {
+                            var optionalAttribute = property.GetCustomAttribute(typeof(OptionalAttribute));
+                            if (optionalAttribute != null)
+                                continue;
+                            else
+                                throw new CheckFieldException(property.Name, value, "Empty setting value");
+                        }
 
                         var checkResult = checker.CheckField(model, property.Name, val);
                         Console.WriteLine(checkResult.Description);
