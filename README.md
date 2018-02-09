@@ -18,7 +18,7 @@ public ModelClass {
 ```
 
 ## Dependencies check on startup
-Added attributes **HttpCheck**, **TcpCheck**, **AmqpCheck** to check connections to the services.
+Attributes **HttpCheck**, **TcpCheck**, **AmqpCheck** can be used to check connections to the services during startup.
 HttpCheck attribute is used to make a GET call. TcpCheck establishes a TCP connection for the check. AmqpCheck checks connection to rabbit mq. 
 
 **HttpCheck example**:
