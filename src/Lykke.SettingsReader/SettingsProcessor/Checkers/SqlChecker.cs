@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
-using Microsoft.WindowsAzure.Storage;
+using System.Data.SqlClient;
 using Lykke.SettingsReader.Exceptions;
 
 namespace Lykke.SettingsReader.Checkers
 {
-    internal class AzureBlobChecker : ISettingsFieldChecker
+    internal class SqlChecker : ISettingsFieldChecker
     {
         public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
         {
@@ -18,10 +18,11 @@ namespace Lykke.SettingsReader.Checkers
             string url = string.Empty;
             try
             {
-                var account = CloudStorageAccount.Parse(val);
-                var client = account.CreateCloudBlobClient();
-                url = client.BaseUri.ToString();
-                client.ListContainersSegmentedAsync(null).GetAwaiter().GetResult();
+                using (var connection = new SqlConnection(val))
+                {
+                    url = connection.DataSource;
+                    connection.Open();
+                }
                 return CheckFieldResult.Ok(url);
             }
             catch
