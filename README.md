@@ -46,6 +46,24 @@ public string Host { get; set; } // 127.0.0.1
 public string RabbitMq { get; set; } // amqp://user:pass@localhost:5672
 ```
 
+**AzureTableCheck example**:
+```csharp
+[AzureTableCheck]
+public string TableConnectionString { get; set; } // valid table token
+```
+
+**AzureBlobCheck example**:
+```csharp
+[AzureBlobCheck]
+public string BlobConnectionString { get; set; } // valid blob token
+```
+
+**AzureQueueCheck example**:
+```csharp
+[AzureQueueCheck]
+public string QueueConnectionString { get; set; } // valid queue token
+```
+
 ## Types of Exceptions
 - **JsonStringEmptyException** - Throws when json string null or empty
 - **IncorrectJsonFormatException** - Throws when json string has incorrect format
