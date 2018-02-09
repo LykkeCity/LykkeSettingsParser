@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.WindowsAzure.Storage;
+using Lykke.SettingsReader.Exceptions;
 
 namespace Lykke.SettingsReader.Checkers
 {
@@ -7,7 +8,12 @@ namespace Lykke.SettingsReader.Checkers
     {
         public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
         {
+            if (value == null)
+                throw new CheckFieldException(property.Name, value, "Setting can not be null");
+
             string val = value.ToString();
+            if (string.IsNullOrWhiteSpace(val))
+                throw new CheckFieldException(property.Name, value, "Empty setting value");
 
             string url = string.Empty;
             try
