@@ -10,8 +10,8 @@ namespace Lykke.SettingsReader.Attributes
         }
 
         public string Path { get; }
-        
-        public override ISettingsFieldChecker GetChecker()
+
+        internal override ISettingsFieldChecker GetChecker()
         {
             return new HttpChecker(Path);
         }

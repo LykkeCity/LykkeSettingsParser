@@ -147,7 +147,13 @@ namespace Lykke.SettingsReader
 
                     foreach (string val in valuesToCheck)
                     {
-                        var checkResult = checker.CheckField(model, property, val);
+                        if (val == null)
+                            throw new CheckFieldException(property.Name, value, "Setting can not be null");
+
+                        if (string.IsNullOrWhiteSpace(val))
+                            throw new CheckFieldException(property.Name, value, "Empty setting value");
+
+                        var checkResult = checker.CheckField(model, property.Name, val);
                         Console.WriteLine(checkResult.Description);
                     }
                 }

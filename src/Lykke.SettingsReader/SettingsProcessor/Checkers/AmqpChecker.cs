@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Lykke.SettingsReader.Exceptions;
+﻿using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Extensions;
 using RabbitMQ.Client;
 
@@ -7,40 +6,30 @@ namespace Lykke.SettingsReader.Checkers
 {
     internal class AmqpChecker : ISettingsFieldChecker
     {
-        public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
+        public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
-            string val = value.ToString();
+            if (!value.SplitParts('@', 2, out var values) || !values[1].SplitParts(':', 2, out var amqpValues))
+                throw new CheckFieldException(propertyName, value, "Invalid amqp connection string");
 
-            if (val.SplitParts('@', 2, out var values) && values[1].SplitParts(':', 2, out var amqpValues))
+            if (!int.TryParse(amqpValues[1], out var port))
+                throw new CheckFieldException(propertyName, value, "Invalid port");
+
+            string address = amqpValues[0];
+            string url = $"{address}:{port}";
+
+            try
             {
-                string address = amqpValues[0];
-
-                if (!int.TryParse(amqpValues[1], out var port))
-                    throw new CheckFieldException(property.Name, val, "Invalid port");
-
-                string url = $"{address}:{port}";
-                bool checkResult;
-
-                try
+                ConnectionFactory factory = new ConnectionFactory { Uri = value };
+                using (var connection = factory.CreateConnection())
                 {
-                    ConnectionFactory factory = new ConnectionFactory {Uri = val};
-
-                    using (var connection = factory.CreateConnection())
-                    {
-                        checkResult = connection.IsOpen;
-                    }
+                    bool checkResult = connection.IsOpen;
+                    return checkResult ? CheckFieldResult.Ok(propertyName, url) : CheckFieldResult.Failed(propertyName, url);
                 }
-                catch
-                {
-                    checkResult = false;
-                }
-                
-                return checkResult
-                    ? CheckFieldResult.Ok(url)
-                    : CheckFieldResult.Failed(url);
             }
-
-            throw new CheckFieldException(property.Name, val, "Invalid amqp connection string");
+            catch
+            {
+                return CheckFieldResult.Failed(propertyName, url);
+            }
         }
     }
 }
