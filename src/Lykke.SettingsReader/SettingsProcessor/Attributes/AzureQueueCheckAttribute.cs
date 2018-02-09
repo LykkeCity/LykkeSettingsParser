@@ -4,7 +4,7 @@ namespace Lykke.SettingsReader.Attributes
 {
     public class AzureQueueCheckAttribute : BaseCheckAttribute
     {
-        public override ISettingsFieldChecker GetChecker()
+        internal override ISettingsFieldChecker GetChecker()
         {
             return new AzureQueueChecker();
         }

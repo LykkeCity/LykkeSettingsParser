@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Http;
-using System.Reflection;
 using Lykke.SettingsReader.Exceptions;
 
 namespace Lykke.SettingsReader.Checkers
@@ -9,33 +8,27 @@ namespace Lykke.SettingsReader.Checkers
     {
         private readonly string _path;
 
-        public HttpChecker(string path)
+        internal HttpChecker(string path)
         {
             _path = path;
         }
 
-        public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
+        public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
-            string val = value.ToString();
-            string url = GetFullUrl(val);
-            bool checkResult;
-
+            string url = GetFullUrl(value);
             if (string.IsNullOrEmpty(url))
-                throw new CheckFieldException(property.Name, val, "Invalid url");
+                throw new CheckFieldException(propertyName, value, "Invalid url");
 
             try
             {
                 HttpResponseMessage response = HttpCheckerClient.Instance.GetAsync(url).GetAwaiter().GetResult();
-                checkResult = response.IsSuccessStatusCode;
+                bool checkResult = response.IsSuccessStatusCode;
+                return checkResult ? CheckFieldResult.Ok(propertyName, url) : CheckFieldResult.Failed(propertyName, url);
             }
             catch(Exception)
             {
-                checkResult = false;
+                return CheckFieldResult.Failed(propertyName, url);
             }
-
-            return checkResult
-                ? CheckFieldResult.Ok(url)
-                : CheckFieldResult.Failed(url);
         }
 
         private string GetFullUrl(string url)

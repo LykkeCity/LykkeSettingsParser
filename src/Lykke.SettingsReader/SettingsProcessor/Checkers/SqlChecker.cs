@@ -1,33 +1,24 @@
-﻿using System.Reflection;
-using System.Data.SqlClient;
-using Lykke.SettingsReader.Exceptions;
+﻿using System.Data.SqlClient;
 
 namespace Lykke.SettingsReader.Checkers
 {
     internal class SqlChecker : ISettingsFieldChecker
     {
-        public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
+        public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
-            if (value == null)
-                throw new CheckFieldException(property.Name, value, "Setting can not be null");
-
-            string val = value.ToString();
-            if (string.IsNullOrWhiteSpace(val))
-                throw new CheckFieldException(property.Name, value, "Empty setting value");
-
             string url = string.Empty;
             try
             {
-                using (var connection = new SqlConnection(val))
+                using (var connection = new SqlConnection(value))
                 {
                     url = connection.DataSource;
                     connection.Open();
                 }
-                return CheckFieldResult.Ok(url);
+                return CheckFieldResult.Ok(propertyName, url);
             }
             catch
             {
-                return CheckFieldResult.Failed(url);
+                return CheckFieldResult.Failed(propertyName, url);
             }
         }
     }

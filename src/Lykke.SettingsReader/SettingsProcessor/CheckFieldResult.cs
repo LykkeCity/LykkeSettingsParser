@@ -4,28 +4,31 @@
     {
         public string Url { get; set; }
         public bool Result { get; set; }
-        public string Description => $"Checking '{Url}' - {(Result ? "Ok" : "Failed")}";
+        public string PropertyName { get; set; }
+
+        public string Description => $"Checking [{PropertyName}] on '{Url}' - {(Result ? "Ok" : "Failed")}";
 
         private CheckFieldResult()
         {
-            
         }
 
-        public static CheckFieldResult Ok(string url)
+        public static CheckFieldResult Ok(string propertyName, string url)
         {
             return new CheckFieldResult
             {
                 Url = url,
-                Result = true
+                Result = true,
+                PropertyName = propertyName,
             };
         }
         
-        public static CheckFieldResult Failed(string url)
+        public static CheckFieldResult Failed(string propertyName, string url)
         {
             return new CheckFieldResult
             {
                 Url = url,
-                Result = false
+                Result = false,
+                PropertyName = propertyName,
             };
         }
     }
