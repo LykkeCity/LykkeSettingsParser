@@ -64,6 +64,12 @@ public string BlobConnectionString { get; set; } // valid blob token
 public string QueueConnectionString { get; set; } // valid queue token
 ```
 
+**SqlCheck example**:
+```csharp
+[SqlCheck]
+public string SqlConnectionString { get; set; } // valid sql connection string
+```
+
 ## Types of Exceptions
 - **JsonStringEmptyException** - Throws when json string null or empty
 - **IncorrectJsonFormatException** - Throws when json string has incorrect format
