@@ -5,7 +5,7 @@ using Lykke.SettingsReader.Exceptions;
 
 namespace Lykke.SettingsReader.Checkers
 {
-    public class HttpChecker : ISettingsFieldChecker
+    internal class HttpChecker : ISettingsFieldChecker
     {
         private readonly string _path;
 

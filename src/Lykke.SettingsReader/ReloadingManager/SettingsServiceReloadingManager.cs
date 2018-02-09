@@ -22,7 +22,7 @@ namespace Lykke.SettingsReader
 
         protected override async Task<TSettings> Load()
         {
-            Console.WriteLine($"{DateTime.UtcNow} Readding settings");
+            Console.WriteLine($"{DateTime.UtcNow} Reading settings");
 
             using (var httpClient = new HttpClient())
             {

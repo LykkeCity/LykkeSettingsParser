@@ -5,7 +5,7 @@ using RabbitMQ.Client;
 
 namespace Lykke.SettingsReader.Checkers
 {
-    public class AmqpChecker : ISettingsFieldChecker
+    internal class AmqpChecker : ISettingsFieldChecker
     {
         public CheckFieldResult CheckField(object model, PropertyInfo property, object value)
         {
