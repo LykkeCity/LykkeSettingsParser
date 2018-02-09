@@ -16,6 +16,36 @@ public ModelClass {
 //....
 }
 ```
+
+## Dependencies check on startup
+Added attributes **HttpCheck**, **TcpCheck**, **AmqpCheck** to check connections to the services.
+HttpCheck attribute is used to make a GET call. TcpCheck establishes a TCP connection for the check. AmqpCheck checks connection to rabbit mq. 
+
+**HttpCheck example**:
+```csharp
+[HttpCheck("/api/isalive")]
+public string ServiceUrl { get; set; } // http://some.service
+```
+
+**TcpCheck examples**:
+```csharp
+[TcpCheck]
+public string Host{ get; set; } // 127.0.0.1:8888
+
+[TcpCheck("Port")]
+public string Host { get; set; } // 127.0.0.1
+public int Port{ get; set; } // 8888
+
+[TcpCheck(8888)]
+public string Host { get; set; } // 127.0.0.1
+```
+
+**AmqpCheck example**:
+```csharp
+[AmqpCheck]
+public string RabbitMq { get; set; } // amqp://user:pass@localhost:5672
+```
+
 ## Types of Exceptions
 - **JsonStringEmptyException** - Throws when json string null or empty
 - **IncorrectJsonFormatException** - Throws when json string has incorrect format
