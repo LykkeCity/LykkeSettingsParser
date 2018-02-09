@@ -5,7 +5,7 @@ using Lykke.SettingsReader.Helpers;
 
 namespace Lykke.SettingsReader.Checkers
 {
-    public class TcpChecker : ISettingsFieldChecker
+    internal class TcpChecker : ISettingsFieldChecker
     {
         private readonly string _portName;
         private readonly int _port;

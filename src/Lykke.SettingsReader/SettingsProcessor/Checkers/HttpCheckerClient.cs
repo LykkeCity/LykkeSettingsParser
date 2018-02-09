@@ -3,7 +3,7 @@ using System.Net.Http;
 
 namespace Lykke.SettingsReader.Checkers
 {
-    public sealed class HttpCheckerClient
+    internal sealed class HttpCheckerClient
     {
         static readonly HttpClient instance=new HttpClient{Timeout = TimeSpan.FromSeconds(5)};
 
