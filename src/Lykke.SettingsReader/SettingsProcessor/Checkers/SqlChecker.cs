@@ -18,9 +18,11 @@ namespace Lykke.SettingsReader.Checkers
             string url = string.Empty;
             try
             {
-                var connection = new SqlConnection(val);
-                url = connection.DataSource;
-                connection.Open();
+                using (var connection = new SqlConnection(val))
+                {
+                    url = connection.DataSource;
+                    connection.Open();
+                }
                 return CheckFieldResult.Ok(url);
             }
             catch
