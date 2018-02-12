@@ -10,12 +10,14 @@ namespace Lykke.SettingsReader.Checkers
         private readonly string _portName;
         private readonly int _port;
         private readonly bool _isPortProvided;
+        private readonly bool _throwExceptionOnFail;
 
-        internal TcpChecker(string portName, int port)
+        internal TcpChecker(string portName, int port, bool throwExceptionOnFail)
         {
             _portName = portName;
             _port = port;
             _isPortProvided = !string.IsNullOrEmpty(_portName) || _port > 0;
+            _throwExceptionOnFail = throwExceptionOnFail;
         }
 
         public CheckFieldResult CheckField(object model, string propertyName, string value)
@@ -58,8 +60,10 @@ namespace Lykke.SettingsReader.Checkers
 
             bool checkResult = TcpHelper.TcpCheck(address, port);
 
-            string url = $"{address}:{port}";
-            return checkResult ? CheckFieldResult.Ok(propertyName, url) : CheckFieldResult.Failed(propertyName, url);
+            string url = $"tcp://{address}:{port}";
+            return checkResult
+                ? CheckFieldResult.Ok(propertyName, url)
+                : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
         }
     }
 }

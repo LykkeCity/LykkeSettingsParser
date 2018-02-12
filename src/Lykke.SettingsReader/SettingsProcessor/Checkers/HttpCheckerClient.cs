@@ -5,7 +5,7 @@ namespace Lykke.SettingsReader.Checkers
 {
     internal sealed class HttpCheckerClient
     {
-        static readonly HttpClient instance=new HttpClient{Timeout = TimeSpan.FromSeconds(5)};
+        static readonly HttpClient instance = new HttpClient{Timeout = TimeSpan.FromSeconds(5)};
 
         // Explicit static constructor to tell C# compiler
         // not to mark type as beforefieldinit
