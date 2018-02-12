@@ -51,7 +51,7 @@ namespace Lykke.SettingsReader.Test
 
             for (var i = 0; i < data.Count(); i++)
                 Assert.Equal(data[i], result.Value[i]);
-            Assert.False(result.Value.Contains(65756));
+            Assert.DoesNotContain(65756, result.Value);
         }
     }
 }
