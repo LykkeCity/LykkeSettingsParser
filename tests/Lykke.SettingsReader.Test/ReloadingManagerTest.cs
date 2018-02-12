@@ -70,36 +70,5 @@ namespace Lykke.SettingsReader.Test
             rootSettingsMock.Verify(x => x.Reload(), Times.Exactly(3));
             Assert.Equal(newConnectionString, fourthValue);
         }
-        /*
-        public class TestReloadingManager : ReloadingManagerBase<object> {
-            protected override async Task<object> Load() {
-                await Task.Delay(100);
-                return new object();
-            }
-        }
-
-        [Fact]
-        public void ReloadingManagerBase_Test()
-        {
-            //Arrange
-            var manager = new TestReloadingManager();
-
-            //Act / Assert
-
-            var task1 = manager.Reload();
-            var task2 = manager.Reload();
-            Assert.Equal(task1, task2);
-
-            var value1 = manager.CurrentValue;
-            var value2 = manager.CurrentValue;
-            Assert.Equal(value1, value2);
-
-            var task3 = manager.Reload();
-            Assert.NotEqual(task1, task3);
-
-            var value3 = manager.CurrentValue;
-            Assert.NotEqual(value1, value3);
-        }
-        */
     }
 }

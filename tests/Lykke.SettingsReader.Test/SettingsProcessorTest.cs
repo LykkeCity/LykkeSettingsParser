@@ -22,6 +22,8 @@ namespace Lykke.SettingsReader.Test
 ""TestDouble"" : 0.2
     }";
 
+        private const string _serviceUrl = "https://api-dev.lykkex.net";
+
 
         [Fact]
         public void EmptyJson()
@@ -154,7 +156,7 @@ namespace Lykke.SettingsReader.Test
             var exception = Record.Exception(() =>
             {
                 SettingsProcessor.Process<TestHttpCheckModel>(
-                    "{'Service': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}, 'Url': 'http://assets.lykke-service.svc.cluster.local/', 'Port':5672, 'Num': 1234}");
+                    $"{{'Service': {{'ServiceUrl': '{_serviceUrl}'}}, 'Url': '{_serviceUrl}', 'Port':5672, 'Num': 1234}}");
             });
 
             Assert.Null(exception);
@@ -165,12 +167,10 @@ namespace Lykke.SettingsReader.Test
         {
             var exception = Record.Exception(() =>
             {
-                SettingsProcessor.Process<TestHttpCheckArrayModel>("{'Services': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
-                                                                   "'List': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
-                                                                   "'IList': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
-                                                                   "'RoList': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
-                                                                   "'RoCollection': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
-                                                                   "'Enumerable': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}]}");
+                SettingsProcessor.Process<TestHttpCheckArrayModel>(
+                    $"{{'Services': [{{'ServiceUrl': '{_serviceUrl}'}}], 'List': [{{'ServiceUrl': '{_serviceUrl}'}}], " +
+                    $"'IList': [{{'ServiceUrl': '{_serviceUrl}'}}], 'RoList': [{{'ServiceUrl': '{_serviceUrl}'}}], " +
+                    $"'RoCollection': [{{'ServiceUrl': '{_serviceUrl}'}}], 'Enumerable': [{{'ServiceUrl': '{_serviceUrl}'}}]}}");
             });
 
             Assert.Null(exception);
@@ -181,12 +181,9 @@ namespace Lykke.SettingsReader.Test
         {
             var exception = Record.Exception(() =>
             {
-                SettingsProcessor.Process<TestHttpCheckListModel>("{'Services': ['http://assets.lykke-service.svc.cluster.local']," +
-                                                                  "'List': ['http://assets.lykke-service.svc.cluster.local']," +
-                                                                  "'IList': ['http://assets.lykke-service.svc.cluster.local']," +
-                                                                  "'RoList': ['http://assets.lykke-service.svc.cluster.local']," +
-                                                                  "'RoCollection': ['http://assets.lykke-service.svc.cluster.local']," +
-                                                                  "'Enumerable': ['http://assets.lykke-service.svc.cluster.local']}");
+                SettingsProcessor.Process<TestHttpCheckListModel>(
+                    $"{{'Services': ['{_serviceUrl}'],'List': ['{_serviceUrl}'],'IList': ['{_serviceUrl}']," +
+                    $"'RoList': ['{_serviceUrl}'],'RoCollection': ['{_serviceUrl}'],'Enumerable': ['{_serviceUrl}']}}");
             });
 
             Assert.Null(exception);
@@ -197,9 +194,10 @@ namespace Lykke.SettingsReader.Test
         {
             var exception = Record.Exception(() =>
             {
-                SettingsProcessor.Process<TestHttpCheckDictioinaryModel>("{'Services': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}," +
-                                                                         "'IDict': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}," +
-                                                                         "'RoDict': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}}");
+                SettingsProcessor.Process<TestHttpCheckDictioinaryModel>(
+                    $"{{'Services': {{'first': {{'ServiceUrl': '{_serviceUrl}'}} }}," +
+                    $"'IDict': {{'first': {{'ServiceUrl': '{_serviceUrl}'}} }}," +
+                    $"'RoDict': {{'first': {{'ServiceUrl': '{_serviceUrl}'}} }} }}");
             });
 
             Assert.Null(exception);
@@ -209,7 +207,8 @@ namespace Lykke.SettingsReader.Test
         public void HttpCheckAttribute_IsInvalidUrl()
         {
             var exception = Record.Exception(() => 
-                SettingsProcessor.Process<TestHttpCheckModel>("{'Service': {'ServiceUrl': 'not_url_at_all'}, 'Url': 'http://assets.lykke-service.svc.cluster.local/', 'Port':5672, 'Num': 1234}")
+                SettingsProcessor.Process<TestHttpCheckModel>(
+                    $"{{'Service': {{'ServiceUrl': 'not_url_at_all'}}, 'Url': '{_serviceUrl}/', 'Port':5672, 'Num': 1234}}")
             );
 
             Assert.NotNull(exception);
@@ -340,6 +339,8 @@ namespace Lykke.SettingsReader.Test
             Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", exception.Message);
         }
 
+        /*
+        // Works only under VPN
         [Fact]
         public void AmqpCheckAttribute_IsOk()
         {
@@ -351,6 +352,7 @@ namespace Lykke.SettingsReader.Test
 
             Assert.Null(exception);
         }
+        */
 
         [Fact]
         public void AmqpCheckAttribute_IsArrayOk()
