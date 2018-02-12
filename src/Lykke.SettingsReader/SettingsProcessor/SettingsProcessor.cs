@@ -159,7 +159,7 @@ namespace Lykke.SettingsReader
                         Console.WriteLine(checkResult.Description);
                     }
                 }
-                else
+                else if (property.CanWrite)
                 {
                     object[] values = GetValuesToCheck(property, model);
 
