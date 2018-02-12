@@ -70,7 +70,7 @@ namespace Lykke.SettingsReader.Test
             rootSettingsMock.Verify(x => x.Reload(), Times.Exactly(3));
             Assert.Equal(newConnectionString, fourthValue);
         }
-
+        /*
         public class TestReloadingManager : ReloadingManagerBase<object> {
             protected override async Task<object> Load() {
                 await Task.Delay(100);
@@ -100,5 +100,6 @@ namespace Lykke.SettingsReader.Test
             var value3 = manager.CurrentValue;
             Assert.NotEqual(value1, value3);
         }
+        */
     }
 }
