@@ -60,7 +60,7 @@ namespace Lykke.SettingsReader.Checkers
 
             bool checkResult = TcpHelper.TcpCheck(address, port);
 
-            string url = $"{address}:{port}";
+            string url = $"tcp://{address}:{port}";
             return checkResult
                 ? CheckFieldResult.Ok(propertyName, url)
                 : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
