@@ -4,22 +4,25 @@ namespace Lykke.SettingsReader.Attributes
 {
     public class TcpCheckAttribute : BaseCheckAttribute
     {
-        public TcpCheckAttribute(string port = null)
+        public string PortName { get; }
+
+        public int Port { get; }
+
+        public TcpCheckAttribute(string port = null, bool throwExceptionOnFail = true)
+            : base(throwExceptionOnFail)
         {
             PortName = port;
         }
         
-        public TcpCheckAttribute(int port)
+        public TcpCheckAttribute(int port, bool throwExceptionOnFail = true)
+            : base(throwExceptionOnFail)
         {
             Port = port;
         }
 
-        public string PortName { get; }
-        public int Port { get; }
-
         internal override ISettingsFieldChecker GetChecker()
         {
-            return new TcpChecker(PortName, Port);
+            return new TcpChecker(PortName, Port, _throwExceptionOnFail);
         }
     }
 }

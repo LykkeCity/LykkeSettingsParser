@@ -5,6 +5,7 @@
         public string Url { get; set; }
         public bool Result { get; set; }
         public string PropertyName { get; set; }
+        public bool ThrowExceptionOnFail { get; set; }
 
         public string Description => $"Checking [{PropertyName}] on '{Url}' - {(Result ? "Ok" : "Failed")}";
 
@@ -22,13 +23,14 @@
             };
         }
         
-        public static CheckFieldResult Failed(string propertyName, string url)
+        public static CheckFieldResult Failed(string propertyName, string url, bool throwExceptionOnFail)
         {
             return new CheckFieldResult
             {
                 Url = url,
                 Result = false,
                 PropertyName = propertyName,
+                ThrowExceptionOnFail = throwExceptionOnFail,
             };
         }
     }

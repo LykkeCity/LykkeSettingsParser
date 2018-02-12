@@ -4,9 +4,14 @@ namespace Lykke.SettingsReader.Attributes
 {
     public class SqlCheckAttribute : BaseCheckAttribute
     {
+        public SqlCheckAttribute(bool throwExceptionOnFail = true)
+            : base(throwExceptionOnFail)
+        {
+        }
+
         internal override ISettingsFieldChecker GetChecker()
         {
-            return new SqlChecker();
+            return new SqlChecker(_throwExceptionOnFail);
         }
     }
 }

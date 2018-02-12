@@ -152,11 +152,13 @@ namespace Lykke.SettingsReader
                             if (optionalAttribute != null)
                                 continue;
                             else
-                                throw new CheckFieldException(property.Name, value, "Empty setting value");
+                                throw new CheckFieldException(property.Name, val, "Empty setting value");
                         }
 
                         var checkResult = checker.CheckField(model, property.Name, val);
                         Console.WriteLine(checkResult.Description);
+                        if (!checkResult.Result && checkResult.ThrowExceptionOnFail)
+                            throw new CheckFieldException(property.Name, val, $"Dependency is unavailable on {checkResult.Url}");
                     }
                 }
                 else if (property.CanWrite)

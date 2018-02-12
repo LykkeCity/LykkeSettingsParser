@@ -6,6 +6,13 @@ namespace Lykke.SettingsReader.Checkers
 {
     internal class AmqpChecker : ISettingsFieldChecker
     {
+        private readonly bool _throwExceptionOnFail;
+
+        internal AmqpChecker(bool throwExceptionOnFail)
+        {
+            _throwExceptionOnFail = throwExceptionOnFail;
+        }
+
         public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
             if (!value.SplitParts('@', 2, out var values) || !values[1].SplitParts(':', 2, out var amqpValues))
@@ -15,7 +22,7 @@ namespace Lykke.SettingsReader.Checkers
                 throw new CheckFieldException(propertyName, value, "Invalid port");
 
             string address = amqpValues[0];
-            string url = $"{address}:{port}";
+            string url = $"amqp://{address}:{port}";
 
             try
             {
@@ -23,12 +30,14 @@ namespace Lykke.SettingsReader.Checkers
                 using (var connection = factory.CreateConnection())
                 {
                     bool checkResult = connection.IsOpen;
-                    return checkResult ? CheckFieldResult.Ok(propertyName, url) : CheckFieldResult.Failed(propertyName, url);
+                    return checkResult
+                        ? CheckFieldResult.Ok(propertyName, url)
+                        : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
                 }
             }
             catch
             {
-                return CheckFieldResult.Failed(propertyName, url);
+                return CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
             }
         }
     }

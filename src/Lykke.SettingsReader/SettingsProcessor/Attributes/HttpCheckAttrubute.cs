@@ -4,16 +4,17 @@ namespace Lykke.SettingsReader.Attributes
 {
     public class HttpCheckAttribute :  BaseCheckAttribute
     {
-        public HttpCheckAttribute(string path)
+        public string Path { get; }
+
+        public HttpCheckAttribute(string path, bool throwExceptionOnFail = true)
+            : base(throwExceptionOnFail)
         {
             Path = path;
         }
 
-        public string Path { get; }
-
         internal override ISettingsFieldChecker GetChecker()
         {
-            return new HttpChecker(Path);
+            return new HttpChecker(Path, _throwExceptionOnFail);
         }
     }
 }

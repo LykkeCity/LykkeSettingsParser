@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Test.Models;
@@ -151,19 +151,19 @@ namespace Lykke.SettingsReader.Test
         [Fact]
         public void HttpCheckAttribute_IsOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var exception = Record.Exception(() =>
             {
                 SettingsProcessor.Process<TestHttpCheckModel>(
                     "{'Service': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}, 'Url': 'http://assets.lykke-service.svc.cluster.local/', 'Port':5672, 'Num': 1234}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Null(exception);
         }
 
         [Fact]
         public void HttpCheckAttribute_IsArrayOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var exception = Record.Exception(() =>
             {
                 SettingsProcessor.Process<TestHttpCheckArrayModel>("{'Services': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
                                                                    "'List': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}], " +
@@ -173,13 +173,13 @@ namespace Lykke.SettingsReader.Test
                                                                    "'Enumerable': [{'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}]}");
             });
 
-            Assert.Equal(8, linesCount);
+            Assert.Null(exception);
         }
-        
+
         [Fact]
         public void HttpCheckAttribute_IsListOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var exception = Record.Exception(() =>
             {
                 SettingsProcessor.Process<TestHttpCheckListModel>("{'Services': ['http://assets.lykke-service.svc.cluster.local']," +
                                                                   "'List': ['http://assets.lykke-service.svc.cluster.local']," +
@@ -189,20 +189,20 @@ namespace Lykke.SettingsReader.Test
                                                                   "'Enumerable': ['http://assets.lykke-service.svc.cluster.local']}");
             });
 
-            Assert.Equal(8, linesCount);
+            Assert.Null(exception);
         }
         
         [Fact]
         public void HttpCheckAttribute_IsDictionaryOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var exception = Record.Exception(() =>
             {
                 SettingsProcessor.Process<TestHttpCheckDictioinaryModel>("{'Services': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}," +
                                                                          "'IDict': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}," +
                                                                          "'RoDict': {'first': {'ServiceUrl': 'http://assets.lykke-service.svc.cluster.local'}}}");
             });
 
-            Assert.Equal(5, linesCount);
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -216,63 +216,68 @@ namespace Lykke.SettingsReader.Test
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'ServiceUrl' field value [not_url_at_all] is failed: Invalid url", exception.Message);
         }
-        
-        [Fact]
-        public void TcpCheckAttribute_IsOk()
-        {
-            int linesCount = GetConsoleLinesCount(() =>
-            {
-                SettingsProcessor.Process<TestTcpCheckModel>("{'HostInfo': {'HostPort': '127.0.0.1:5672'}, 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}");
-            });
 
-            Assert.Equal(5, linesCount);
-        }
-        
         [Fact]
         public void TcpCheckAttribute_IsArrayOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var checkList = new List<(string, string)>
             {
-                SettingsProcessor.Process<TestTcpCheckArrayModel>("{'Endpoints': [{'HostPort': '127.0.0.1:5672'}]," +
-                                                                  "'List': [{'HostPort': '127.0.0.1:5672'}]," +
-                                                                  "'IList': [{'HostPort': '127.0.0.1:5672'}]," +
-                                                                  "'RoList': [{'HostPort': '127.0.0.1:5672'}]," +
-                                                                  "'RoCollection': [{'HostPort': '127.0.0.1:5672'}]," +
-                                                                  "'Enumerable': [{'HostPort': '127.0.0.1:5672'}]}");
-            });
+                ("Endpoints", "127.0.0.1:5672"),
+                ("List", "127.0.0.1:5672"),
+                ("IList", "127.0.0.1:5672"),
+                ("RoList", "127.0.0.1:5672"),
+                ("RoCollection", "127.0.0.1:5672"),
+                ("Enumerable", "127.0.0.1:5672")
+            };
+            foreach (var pair in checkList)
+            {
+                var exception = Record.Exception(() =>
+                {
+                    SettingsProcessor.Process<TestTcpCheckArrayModel>($"{{'{pair.Item1}': [{{'HostPort': '{pair.Item2}'}}] }}");
+                });
 
-            Assert.Equal(8, linesCount);
+                Assert.NotNull(exception);
+                Assert.Equal($"Check of the 'HostPort' field value [{pair.Item2}] is failed: Dependency is unavailable on {pair.Item2}", exception.Message);
+            }
         }
-        
+
         [Fact]
         public void TcpCheckAttribute_IsListOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var checkList = new List<(string, string)>
             {
-                SettingsProcessor.Process<TestTcpCheckListModel>("{'Hosts': ['127.0.0.1:5672']," +
-                                                                 "'List': ['127.0.0.1:5672']," +
-                                                                 "'IList': ['127.0.0.1:5672']," +
-                                                                 "'RoList': ['127.0.0.1:5672']," +
-                                                                 "'RoCollection': ['127.0.0.1:5672']," +
-                                                                 "'Enumerable': ['127.0.0.1:5672']}");
-            });
+                ("Hosts", "127.0.0.1:5672"),
+                ("List", "127.0.0.1:5672"),
+                ("IList", "127.0.0.1:5672"),
+                ("RoList", "127.0.0.1:5672"),
+                ("RoCollection", "127.0.0.1:5672"),
+                ("Enumerable", "127.0.0.1:5672")
+            };
+            foreach (var pair in checkList)
+            {
+                var exception = Record.Exception(() =>
+                {
+                    SettingsProcessor.Process<TestTcpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
+                });
 
-            Assert.Equal(8, linesCount);
+                Assert.NotNull(exception);
+                Assert.Equal($"Check of the '{pair.Item1}' field value [{pair.Item2}] is failed: Dependency is unavailable on {pair.Item2}", exception.Message);
+            }
         }
-        
+
         [Fact]
         public void TcpCheckAttribute_IsDictionaryOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var exception = Record.Exception(() =>
             {
                 SettingsProcessor.Process<TestTcpCheckDictionaryModel>("{'Endpoints': {'first': {'HostPort': '127.0.0.1:5672'}}," +
                                                                        "'IDict': {'first': {'HostPort': '127.0.0.1:5672'}}," +
                                                                        "'RoDict': {'first': {'HostPort': '127.0.0.1:5672'}}}");
             });
 
-            Assert.Equal(5, linesCount);
+            Assert.Null(exception);
         }
-        
+
         [Fact]
         public void TcpCheckAttribute_IsInvalidPort()
         {
@@ -284,99 +289,138 @@ namespace Lykke.SettingsReader.Test
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'HostPort' field value [127.0.0.1:zzz] is failed: Invalid port", exception.Message);
         }
-        
+
         [Fact]
         public void TcpCheckAttribute_IsInvalidPortValue()
         {
-            var exception = Record.Exception(() => 
-                SettingsProcessor.Process<TestTcpCheckModel>("{'HostInfo': {'HostPort': '127.0.0.1:5672'}, 'Host': '127.0.0.1', 'Port': 'not a port', 'Server': '127.0.0.1'}")
+            var exception1 = Record.Exception(() => 
+                SettingsProcessor.Process<TestTcpCheckModel>("{'HostInfo': {'HostPort': '127.0.0.1:5672'}}")
             );
 
-            Assert.NotNull(exception);
-            Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Invalid port value in property 'Port'", exception.Message);
+            Assert.NotNull(exception1);
+            Assert.IsType<CheckFieldException>(exception1);
+            Assert.Equal("Check of the 'HostPort' field value [127.0.0.1:5672] is failed: Dependency is unavailable on 127.0.0.1:5672", exception1.Message);
+
+            var exception2 = Record.Exception(() =>
+                SettingsProcessor.Process<TestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': 'not a port'}")
+            );
+
+            Assert.NotNull(exception2);
+            Assert.IsType<CheckFieldException>(exception2);
+            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Invalid port value in property 'Port'", exception2.Message);
+
+            var exception3 = Record.Exception(() =>
+                SettingsProcessor.Process<TestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}")
+            );
+
+            Assert.NotNull(exception3);
+            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Dependency is unavailable on 127.0.0.1:5672", exception3.Message);
+
+            var exception4 = Record.Exception(() =>
+                SettingsProcessor.Process<TestTcpCheckModel>("{'Server': '127.0.0.1'}")
+            );
+
+            Assert.NotNull(exception4);
+            Assert.IsType<CheckFieldException>(exception4);
+            Assert.Equal("Check of the 'Server' field value [127.0.0.1] is failed: Dependency is unavailable on 127.0.0.1:5672", exception4.Message);
         }
-        
+
         [Fact]
         public void TcpCheckAttribute_WrongPortProperty()
         {
             var exception = Record.Exception(() => 
                 SettingsProcessor.Process<WrongTestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}")
             );
-        
+
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", exception.Message);
         }
-        
+
         [Fact]
         public void AmqpCheckAttribute_IsOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var exception = Record.Exception(() =>
             {
                 SettingsProcessor.Process<TestAmqpCheckModel>("{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:5672'}}");
             });
 
-            Assert.Equal(4, linesCount);
+            Assert.Null(exception);
         }
 
         [Fact]
         public void AmqpCheckAttribute_IsArrayOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var checkList = new List<(string, string)>
             {
-                SettingsProcessor.Process<TestAmqpCheckArrayModel>("{'Rabbits': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
-                                                                   "'List': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
-                                                                   "'IList': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
-                                                                   "'RoList': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
-                                                                   "'RoCollection': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]," +
-                                                                   "'Enumerable': [{'ConnString': 'amqp://guest:guest@localhost:5672'}]}");
-            });
+                ("Rabbits", "amqp://guest:guest@localhost:5672"),
+                ("List", "amqp://guest:guest@localhost:5672"),
+                ("IList", "amqp://guest:guest@localhost:5672"),
+                ("RoList", "amqp://guest:guest@localhost:5672"),
+                ("RoCollection", "amqp://guest:guest@localhost:5672"),
+                ("Enumerable", "amqp://guest:guest@localhost:5672")
+            };
+            foreach (var pair in checkList)
+            {
+                var exception = Record.Exception(() =>
+                {
+                    SettingsProcessor.Process<TestAmqpCheckArrayModel>($"{{'{pair.Item1}': [{{'ConnString': '{pair.Item2}'}}] }}");
+                });
 
-            Assert.Equal(8, linesCount);
+                Assert.NotNull(exception);
+                Assert.Equal($"Check of the 'ConnString' field value [{pair.Item2}] is failed: Dependency is unavailable on amqp://localhost:5672", exception.Message);
+            }
         }
-        
+
         [Fact]
         public void AmqpCheckAttribute_IsListOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var checkList = new List<(string, string)>
             {
-                SettingsProcessor.Process<TestAmqpCheckListModel>("{'Rabbits': ['amqp://guest:guest@localhost:5672']," +
-                                                                  "'List': ['amqp://guest:guest@localhost:5672']," +
-                                                                  "'IList': ['amqp://guest:guest@localhost:5672']," +
-                                                                  "'RoList': ['amqp://guest:guest@localhost:5672']," +
-                                                                  "'RoCollection': ['amqp://guest:guest@localhost:5672']," +
-                                                                  "'Enumerable': ['amqp://guest:guest@localhost:5672']}");
-            });
+                ("Rabbits", "amqp://guest:guest@localhost:5672"),
+                ("List", "amqp://guest:guest@localhost:5672"),
+                ("IList", "amqp://guest:guest@localhost:5672"),
+                ("RoList", "amqp://guest:guest@localhost:5672"),
+                ("RoCollection", "amqp://guest:guest@localhost:5672"),
+                ("Enumerable", "amqp://guest:guest@localhost:5672")
+            };
+            foreach (var pair in checkList)
+            {
+                var exception = Record.Exception(() =>
+                {
+                    SettingsProcessor.Process<TestAmqpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
+                });
 
-            Assert.Equal(8, linesCount);
+                Assert.NotNull(exception);
+                Assert.Equal($"Check of the '{pair.Item1}' field value [{pair.Item2}] is failed: Dependency is unavailable on amqp://localhost:5672", exception.Message);
+            }
         }
-        
+
         [Fact]
         public void AmqpCheckAttribute_IsDictionaryOk()
         {
-            int linesCount = GetConsoleLinesCount(() =>
+            var exception = Record.Exception(() =>
             {
                 SettingsProcessor.Process<TestAmqpCheckDictionaryModel>("{'Rabbits': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}," +
                                                                         "'IDict': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}," +
                                                                         "'RoDict': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}}");
             });
 
-            Assert.Equal(5, linesCount);
+            Assert.Null(exception);
         }
-        
+
         [Fact]
         public void AmqpCheckAttribute_IsInvalidPort()
         {
             var exception = Record.Exception(() => 
                     SettingsProcessor.Process<TestAmqpCheckModel>("{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz'}}")
             );
-        
+
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'ConnString' field value [amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz] is failed: Invalid port", exception.Message);
         }
-        
+
         [Fact]
         public void AmqpCheckAttribute_IsInvalidConnectionString()
         {
@@ -387,20 +431,6 @@ namespace Lykke.SettingsReader.Test
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'ConnString' field value [rabbit-registration.lykke-service.svc.cluster.local:5672] is failed: Invalid amqp connection string", exception.Message);
-        }
-
-        private int GetConsoleLinesCount(Action action)
-        {
-            using (StringWriter sw = new StringWriter())
-            {
-                var consoleOut = Console.Out;
-                Console.SetOut(sw);
-                action.Invoke();
-                var linesCount = sw.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length;
-                Console.SetOut(consoleOut);
-                return linesCount;
-            }
-            
         }
     }
 }

@@ -4,6 +4,13 @@ namespace Lykke.SettingsReader.Checkers
 {
     internal class AzureQueueChecker : ISettingsFieldChecker
     {
+        private readonly bool _throwExceptionOnFail;
+
+        internal AzureQueueChecker(bool throwExceptionOnFail)
+        {
+            _throwExceptionOnFail = throwExceptionOnFail;
+        }
+
         public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
             string url = string.Empty;
@@ -17,7 +24,7 @@ namespace Lykke.SettingsReader.Checkers
             }
             catch
             {
-                return CheckFieldResult.Failed(propertyName, url);
+                return CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
             }
         }
     }
