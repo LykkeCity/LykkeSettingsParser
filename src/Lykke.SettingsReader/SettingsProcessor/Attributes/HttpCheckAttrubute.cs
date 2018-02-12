@@ -6,7 +6,13 @@ namespace Lykke.SettingsReader.Attributes
     {
         public string Path { get; }
 
-        public HttpCheckAttribute(string path, bool throwExceptionOnFail = true)
+        public HttpCheckAttribute(string path)
+            : base(true)
+        {
+            Path = path;
+        }
+
+        public HttpCheckAttribute(string path, bool throwExceptionOnFail)
             : base(throwExceptionOnFail)
         {
             Path = path;

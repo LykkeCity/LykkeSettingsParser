@@ -4,7 +4,12 @@ namespace Lykke.SettingsReader.Attributes
 {
     public class SqlCheckAttribute : BaseCheckAttribute
     {
-        public SqlCheckAttribute(bool throwExceptionOnFail = true)
+        public SqlCheckAttribute()
+            : base(true)
+        {
+        }
+
+        public SqlCheckAttribute(bool throwExceptionOnFail)
             : base(throwExceptionOnFail)
         {
         }

@@ -4,7 +4,12 @@ namespace Lykke.SettingsReader.Attributes
 {
     public class AmqpCheckAttribute : BaseCheckAttribute
     {
-        public AmqpCheckAttribute(bool throwExceptionOnFail = true)
+        public AmqpCheckAttribute()
+            : base(true)
+        {
+        }
+
+        public AmqpCheckAttribute(bool throwExceptionOnFail)
             : base(throwExceptionOnFail)
         {
         }

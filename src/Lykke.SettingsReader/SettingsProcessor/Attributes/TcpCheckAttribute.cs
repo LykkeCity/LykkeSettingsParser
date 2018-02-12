@@ -8,13 +8,25 @@ namespace Lykke.SettingsReader.Attributes
 
         public int Port { get; }
 
-        public TcpCheckAttribute(string port = null, bool throwExceptionOnFail = true)
+        public TcpCheckAttribute(string port = null)
+            : base(true)
+        {
+            PortName = port;
+        }
+
+        public TcpCheckAttribute(string port, bool throwExceptionOnFail)
             : base(throwExceptionOnFail)
         {
             PortName = port;
         }
-        
-        public TcpCheckAttribute(int port, bool throwExceptionOnFail = true)
+
+        public TcpCheckAttribute(int port)
+            : base(true)
+        {
+            Port = port;
+        }
+
+        public TcpCheckAttribute(int port, bool throwExceptionOnFail)
             : base(throwExceptionOnFail)
         {
             Port = port;

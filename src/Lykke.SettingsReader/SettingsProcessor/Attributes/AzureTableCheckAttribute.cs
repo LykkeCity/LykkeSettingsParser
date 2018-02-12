@@ -4,7 +4,12 @@ namespace Lykke.SettingsReader.Attributes
 {
     public class AzureTableCheckAttribute : BaseCheckAttribute
     {
-        public AzureTableCheckAttribute(bool throwExceptionOnFail = true)
+        public AzureTableCheckAttribute()
+            : base(true)
+        {
+        }
+
+        public AzureTableCheckAttribute(bool throwExceptionOnFail)
             : base(throwExceptionOnFail)
         {
         }

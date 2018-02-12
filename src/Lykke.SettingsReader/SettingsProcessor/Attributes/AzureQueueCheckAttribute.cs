@@ -4,7 +4,12 @@ namespace Lykke.SettingsReader.Attributes
 {
     public class AzureQueueCheckAttribute : BaseCheckAttribute
     {
-        public AzureQueueCheckAttribute(bool throwExceptionOnFail = true)
+        public AzureQueueCheckAttribute()
+            : base(true)
+        {
+        }
+
+        public AzureQueueCheckAttribute(bool throwExceptionOnFail)
             : base(throwExceptionOnFail)
         {
         }
