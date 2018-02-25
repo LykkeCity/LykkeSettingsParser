@@ -30,7 +30,7 @@ namespace Lykke.SettingsReader
                 throw new IncorrectJsonFormatException(e);
             }
 
-            var result = FeelChildrenFields<T>(jsonObj);
+            var result = FillChildrenFields<T>(jsonObj);
 
             Console.WriteLine("Checking services");
             ProcessChecks(result);
@@ -39,7 +39,7 @@ namespace Lykke.SettingsReader
             return result;
         }
 
-        private static T FeelChildrenFields<T>(JToken jsonObj, string path = "")
+        private static T FillChildrenFields<T>(JToken jsonObj, string path = "")
         {
             return (T)Convert(jsonObj, typeof(T), path);
         }
@@ -124,7 +124,7 @@ namespace Lykke.SettingsReader
             Type objType = model.GetType();
             PropertyInfo[] properties = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => !p.GetIndexParameters().Any()).ToArray();
-            
+
             foreach (PropertyInfo property in properties)
             {
                 object value = property.GetValue(model);
@@ -140,7 +140,7 @@ namespace Lykke.SettingsReader
                             valuesToCheck = strings.ToArray();
                             break;
                         case string str:
-                            valuesToCheck = new[] {str};
+                            valuesToCheck = new[] { str };
                             break;
                     }
 
@@ -176,24 +176,24 @@ namespace Lykke.SettingsReader
             var values = new List<object>();
 
             var getMethod = property.GetGetMethod();
-                
-            if (getMethod.ReturnType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(getMethod.ReturnType))
+
+            if (getMethod != null && getMethod.ReturnType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(getMethod.ReturnType))
             {
                 var arrayObject = getMethod.Invoke(model, null);
 
                 if (arrayObject != null)
                 {
-                    foreach (object element in (IEnumerable) arrayObject)
+                    foreach (object element in (IEnumerable)arrayObject)
                     {
                         values.Add(element);
                     }
                 }
             }
             else
-            if (getMethod.ReturnType != typeof(string) && GetGenericArgumentsOfAssignableType(getMethod.ReturnType, typeof(IReadOnlyDictionary<,>)).Any())
+            if (getMethod != null && getMethod.ReturnType != typeof(string) && GetGenericArgumentsOfAssignableType(getMethod.ReturnType, typeof(IReadOnlyDictionary<,>)).Any())
             {
                 var dictObject = (IDictionary)getMethod.Invoke(model, null);
-                
+
                 if (dictObject != null)
                 {
                     foreach (object key in dictObject.Keys)
@@ -205,7 +205,7 @@ namespace Lykke.SettingsReader
             else
             {
                 if (property.PropertyType.IsClass && !property.PropertyType.IsValueType &&
-                    !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string) 
+                    !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string)
                     && property.PropertyType != typeof(object))
                 {
                     values.Add(property.GetValue(model));

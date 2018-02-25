@@ -23,11 +23,15 @@ namespace Lykke.SettingsReader.Checkers
 
             try
             {
-                HttpResponseMessage response = HttpCheckerClient.Instance.GetAsync(url).GetAwaiter().GetResult();
-                bool checkResult = response.IsSuccessStatusCode;
-                return checkResult
-                    ? CheckFieldResult.Ok(propertyName, url)
-                    : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                using (var httpClient = new HttpClient{Timeout = TimeSpan.FromSeconds(5)})
+                {
+                    var response = httpClient.GetAsync(url).GetAwaiter().GetResult();
+                    bool checkResult = response.IsSuccessStatusCode;
+                    return checkResult
+                        ? CheckFieldResult.Ok(propertyName, url)
+                        : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                }
+
             }
             catch(Exception)
             {

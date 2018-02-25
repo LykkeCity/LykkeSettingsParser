@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Lykke.SettingsReader.ReloadingManager
+﻿namespace Lykke.SettingsReader.ReloadingManager
 {
     public static class ConstantReloadingManager
     {

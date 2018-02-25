@@ -374,6 +374,7 @@ namespace Lykke.SettingsReader.Test
                 });
 
                 Assert.NotNull(exception);
+                Assert.IsType<CheckFieldException>(exception);
                 Assert.Equal($"Check of the 'ConnString' field value [{pair.Item2}] is failed: Dependency is unavailable on amqp://localhost:5672", exception.Message);
             }
         }
@@ -398,6 +399,7 @@ namespace Lykke.SettingsReader.Test
                 });
 
                 Assert.NotNull(exception);
+                Assert.IsType<CheckFieldException>(exception);
                 Assert.Equal($"Check of the '{pair.Item1}' field value [{pair.Item2}] is failed: Dependency is unavailable on amqp://localhost:5672", exception.Message);
             }
         }
@@ -424,7 +426,7 @@ namespace Lykke.SettingsReader.Test
 
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Check of the 'ConnString' field value [amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz] is failed: Invalid port", exception.Message);
+            Assert.Equal("Check of the 'ConnString' field value [amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz] is failed: Invalid URI: Invalid port specified.", exception.Message);
         }
 
         [Fact]
@@ -436,7 +438,7 @@ namespace Lykke.SettingsReader.Test
         
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Check of the 'ConnString' field value [rabbit-registration.lykke-service.svc.cluster.local:5672] is failed: Invalid amqp connection string", exception.Message);
+            Assert.Equal("Check of the 'ConnString' field value [rabbit-registration.lykke-service.svc.cluster.local:5672] is failed: Wrong scheme in AMQP URI: rabbit-registration.lykke-service.svc.cluster.local", exception.Message);
         }
     }
 }
