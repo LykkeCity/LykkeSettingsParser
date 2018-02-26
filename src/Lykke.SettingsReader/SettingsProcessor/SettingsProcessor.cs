@@ -127,6 +127,11 @@ namespace Lykke.SettingsReader
 
             foreach (PropertyInfo property in properties)
             {
+                if (!property.CanRead)
+                {
+                    Console.WriteLine($"Can't check {property.Name}. It has no Get method");
+                    continue;
+                }
                 object value = property.GetValue(model);
                 var checkAttribute = (BaseCheckAttribute)property.GetCustomAttribute(typeof(BaseCheckAttribute));
 

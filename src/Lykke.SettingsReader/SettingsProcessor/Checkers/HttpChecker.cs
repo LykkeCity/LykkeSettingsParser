@@ -23,17 +23,19 @@ namespace Lykke.SettingsReader.Checkers
 
             try
             {
-                using (var httpClient = new HttpClient{Timeout = TimeSpan.FromSeconds(5)})
+                using (var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) })
                 {
-                    var response = httpClient.GetAsync(url).GetAwaiter().GetResult();
-                    bool checkResult = response.IsSuccessStatusCode;
-                    return checkResult
-                        ? CheckFieldResult.Ok(propertyName, url)
-                        : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                    using (var response = httpClient.GetAsync(url).GetAwaiter().GetResult())
+                    {
+                        bool checkResult = response.IsSuccessStatusCode;
+                        return checkResult
+                            ? CheckFieldResult.Ok(propertyName, url)
+                            : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                    }
                 }
 
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
             }
@@ -45,7 +47,7 @@ namespace Lykke.SettingsReader.Checkers
             {
                 return new Uri(new Uri(url), _path).ToString();
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return string.Empty;
             }
