@@ -24,7 +24,8 @@ namespace Lykke.SettingsReader.Test
             servicesMock.Verify(x => x[SettingsConfiguratorExtensions.DefaultConfigurationKey], Times.Once());
         }
 
-        public class TestSettings {
+        public class TestSettings
+        {
             public string ConnectionString { get; set; }
         }
 
@@ -69,6 +70,21 @@ namespace Lykke.SettingsReader.Test
             var fourthValue = connectionStringManager.Reload().Result;
             rootSettingsMock.Verify(x => x.Reload(), Times.Exactly(3));
             Assert.Equal(newConnectionString, fourthValue);
+        }
+
+        [Fact]
+        public void ReloadingManager_ShouldThrowUnwrappedException()
+        {
+            var reloadingManager = new ExceptionalReloadingManager();
+            Assert.Throws<InvalidOperationException>(() => reloadingManager.CurrentValue);
+        }
+
+        private sealed class ExceptionalReloadingManager : ReloadingManagerBase<string>
+        {
+            protected override Task<string> Load()
+            {
+                return Task.FromException<string>(new InvalidOperationException("Hi!"));
+            }
         }
     }
 }
