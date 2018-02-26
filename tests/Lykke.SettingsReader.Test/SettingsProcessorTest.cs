@@ -19,7 +19,7 @@ namespace Lykke.SettingsReader.Test
 {""test1"":""testString7"",""test2"":27,""test3"":""2017-05-08 22:13:45""},
 {""test1"":""testString8"",""test2"":28,""test3"":""2017-05-09 22:13:45""},
 {""test1"":""testString9"",""test2"":29,""test3"":""2017-05-10 22:13:45""}],
-""TestDouble"" : 0.2
+""TestDouble"" : 0.2, ""SetOnlyProperty"" : 0.3
     }";
 
         private const string _serviceUrl = "https://api-dev.lykkex.net";
@@ -134,7 +134,7 @@ namespace Lykke.SettingsReader.Test
             Assert.Equal(-10.4, Math.Round(model.Float, 2));
             Assert.Equal((decimal)-10.2, model.Decimal);
         }
-        
+
         [Fact]
         public void Test_NegativeNumbers_IsOk()
         {
@@ -188,7 +188,7 @@ namespace Lykke.SettingsReader.Test
 
             Assert.Null(exception);
         }
-        
+
         [Fact]
         public void HttpCheckAttribute_IsDictionaryOk()
         {
@@ -206,7 +206,7 @@ namespace Lykke.SettingsReader.Test
         [Fact]
         public void HttpCheckAttribute_IsInvalidUrl()
         {
-            var exception = Record.Exception(() => 
+            var exception = Record.Exception(() =>
                 SettingsProcessor.Process<TestHttpCheckModel>(
                     $"{{'Service': {{'ServiceUrl': 'not_url_at_all'}}, 'Url': '{_serviceUrl}/', 'Port':5672, 'Num': 1234}}")
             );
@@ -280,10 +280,10 @@ namespace Lykke.SettingsReader.Test
         [Fact]
         public void TcpCheckAttribute_IsInvalidPort()
         {
-            var exception = Record.Exception(() => 
+            var exception = Record.Exception(() =>
                     SettingsProcessor.Process<TestTcpCheckModel>("{'HostInfo': {'HostPort': '127.0.0.1:zzz'}, 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}")
             );
-        
+
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'HostPort' field value [127.0.0.1:zzz] is failed: Invalid port", exception.Message);
@@ -295,7 +295,7 @@ namespace Lykke.SettingsReader.Test
             const string host = "127.0.0.1";
             const int port = 5672;
 
-            var exception1 = Record.Exception(() => 
+            var exception1 = Record.Exception(() =>
                 SettingsProcessor.Process<TestTcpCheckModel>($"{{'HostInfo': {{'HostPort': '{host}:{port}'}} }}")
             );
 
@@ -330,7 +330,7 @@ namespace Lykke.SettingsReader.Test
         [Fact]
         public void TcpCheckAttribute_WrongPortProperty()
         {
-            var exception = Record.Exception(() => 
+            var exception = Record.Exception(() =>
                 SettingsProcessor.Process<WrongTestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}")
             );
 
@@ -374,6 +374,7 @@ namespace Lykke.SettingsReader.Test
                 });
 
                 Assert.NotNull(exception);
+                Assert.IsType<CheckFieldException>(exception);
                 Assert.Equal($"Check of the 'ConnString' field value [{pair.Item2}] is failed: Dependency is unavailable on amqp://localhost:5672", exception.Message);
             }
         }
@@ -398,6 +399,7 @@ namespace Lykke.SettingsReader.Test
                 });
 
                 Assert.NotNull(exception);
+                Assert.IsType<CheckFieldException>(exception);
                 Assert.Equal($"Check of the '{pair.Item1}' field value [{pair.Item2}] is failed: Dependency is unavailable on amqp://localhost:5672", exception.Message);
             }
         }
@@ -418,25 +420,25 @@ namespace Lykke.SettingsReader.Test
         [Fact]
         public void AmqpCheckAttribute_IsInvalidPort()
         {
-            var exception = Record.Exception(() => 
+            var exception = Record.Exception(() =>
                     SettingsProcessor.Process<TestAmqpCheckModel>("{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz'}}")
             );
 
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Check of the 'ConnString' field value [amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz] is failed: Invalid port", exception.Message);
+            Assert.Equal("Check of the 'ConnString' field value [amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz] is failed: Invalid URI: Invalid port specified.", exception.Message);
         }
 
         [Fact]
         public void AmqpCheckAttribute_IsInvalidConnectionString()
         {
-            var exception = Record.Exception(() => 
+            var exception = Record.Exception(() =>
                 SettingsProcessor.Process<TestAmqpCheckModel>("{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'rabbit-registration.lykke-service.svc.cluster.local:5672'}}")
             );
-        
+
             Assert.NotNull(exception);
             Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Check of the 'ConnString' field value [rabbit-registration.lykke-service.svc.cluster.local:5672] is failed: Invalid amqp connection string", exception.Message);
+            Assert.Equal("Check of the 'ConnString' field value [rabbit-registration.lykke-service.svc.cluster.local:5672] is failed: Wrong scheme in AMQP URI: rabbit-registration.lykke-service.svc.cluster.local", exception.Message);
         }
     }
 }

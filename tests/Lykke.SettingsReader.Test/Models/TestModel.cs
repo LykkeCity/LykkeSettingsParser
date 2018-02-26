@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Lykke.SettingsReader.Test.Models
 {
-    class TestModel: SubTestModel
+    class TestModel : SubTestModel
     {
         public SubTestModel SubObject { get; set; }
 
@@ -13,6 +11,14 @@ namespace Lykke.SettingsReader.Test.Models
         public SubTestModel[] SubArray { get; set; }
 
         public IEnumerable<SubTestModel> SubArrayGen { get; set; }
+
+        public double SetOnlyProperty
+        {
+            set
+            {
+                // do some work
+            }
+        }
 
     }
 }

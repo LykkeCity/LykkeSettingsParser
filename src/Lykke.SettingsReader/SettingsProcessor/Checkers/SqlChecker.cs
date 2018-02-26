@@ -13,6 +13,7 @@ namespace Lykke.SettingsReader.Checkers
 
         public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
+            //TODO use   var sb = new SqlConnectionStringBuilder(value); to parse the connection string
             string url = string.Empty;
             try
             {
