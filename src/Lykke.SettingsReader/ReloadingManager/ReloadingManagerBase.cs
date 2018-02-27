@@ -13,7 +13,7 @@ namespace Lykke.SettingsReader
 
         public bool HasLoaded => CurrentTask.Status == TaskStatus.RanToCompletion;
 
-        public TSettings CurrentValue => CurrentTask.Result;
+        public TSettings CurrentValue => CurrentTask.GetAwaiter().GetResult();
 
         protected Task<TSettings> CurrentTask => Load(reload: false);
 
