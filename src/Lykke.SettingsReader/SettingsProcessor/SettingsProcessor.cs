@@ -15,10 +15,13 @@ namespace Lykke.SettingsReader
     {
         public static T Process<T>(string json)
         {
+            return Process<T>(json, false);
+        }
+
+        public static T Process<T>(string json, bool disableDependenciesCheck)
+        {
             if (string.IsNullOrEmpty(json))
-            {
                 throw new JsonStringEmptyException();
-            }
 
             JToken jsonObj;
             try
@@ -32,9 +35,12 @@ namespace Lykke.SettingsReader
 
             var result = FillChildrenFields<T>(jsonObj);
 
-            Console.WriteLine("Checking services");
-            ProcessChecks(result);
-            Console.WriteLine("Checking services - Done.");
+            if (!disableDependenciesCheck)
+            {
+                Console.WriteLine("Checking services");
+                ProcessChecks(result);
+                Console.WriteLine("Checking services - Done.");
+            }
 
             return result;
         }
@@ -94,11 +100,6 @@ namespace Lykke.SettingsReader
             }
         }
 
-        private static object Convert_FromProperty(JProperty jsonObj, Type targetType, string path)
-        {
-            return Convert(jsonObj.Value, targetType, path);
-        }
-
         public static bool IsGenericEnumerable(Type type)
         {
             return type.GetTypeInfo().IsGenericType &&
@@ -109,6 +110,11 @@ namespace Lykke.SettingsReader
         public static bool IsEnumerable(Type type)
         {
             return IsGenericEnumerable(type) || type.IsArray;
+        }
+
+        private static object Convert_FromProperty(JProperty jsonObj, Type targetType, string path)
+        {
+            return Convert(jsonObj.Value, targetType, path);
         }
 
         private static string ConcatPath(string path, string propertyName)
