@@ -212,6 +212,7 @@ namespace Lykke.SettingsReader.Test
             );
 
             Assert.NotNull(exception);
+            exception = GetBaseException(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'ServiceUrl' field value [not_url_at_all] is failed: Invalid url", exception.Message);
         }
@@ -236,6 +237,7 @@ namespace Lykke.SettingsReader.Test
                 });
 
                 Assert.NotNull(exception);
+                exception = GetBaseException(exception);
                 Assert.Equal($"Check of the 'HostPort' field value [{pair.Item2}] is failed: Dependency is unavailable on tcp://{pair.Item2}", exception.Message);
             }
         }
@@ -260,6 +262,7 @@ namespace Lykke.SettingsReader.Test
                 });
 
                 Assert.NotNull(exception);
+                exception = GetBaseException(exception);
                 Assert.Equal($"Check of the '{pair.Item1}' field value [{pair.Item2}] is failed: Dependency is unavailable on tcp://{pair.Item2}", exception.Message);
             }
         }
@@ -285,6 +288,7 @@ namespace Lykke.SettingsReader.Test
             );
 
             Assert.NotNull(exception);
+            exception = GetBaseException(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'HostPort' field value [127.0.0.1:zzz] is failed: Invalid port", exception.Message);
         }
@@ -300,6 +304,7 @@ namespace Lykke.SettingsReader.Test
             );
 
             Assert.NotNull(exception1);
+            exception1 = GetBaseException(exception1);
             Assert.IsType<CheckFieldException>(exception1);
             Assert.Equal($"Check of the 'HostPort' field value [{host}:{port}] is failed: Dependency is unavailable on tcp://{host}:{port}", exception1.Message);
 
@@ -308,6 +313,7 @@ namespace Lykke.SettingsReader.Test
             );
 
             Assert.NotNull(exception2);
+            exception2 = GetBaseException(exception2);
             Assert.IsType<CheckFieldException>(exception2);
             Assert.Equal($"Check of the 'Host' field value [{host}] is failed: Invalid port value in property 'Port'", exception2.Message);
 
@@ -316,6 +322,7 @@ namespace Lykke.SettingsReader.Test
             );
 
             Assert.NotNull(exception3);
+            exception3 = GetBaseException(exception3);
             Assert.Equal($"Check of the 'Host' field value [{host}] is failed: Dependency is unavailable on tcp://{host}:{port}", exception3.Message);
 
             var exception4 = Record.Exception(() =>
@@ -323,6 +330,7 @@ namespace Lykke.SettingsReader.Test
             );
 
             Assert.NotNull(exception4);
+            exception4 = GetBaseException(exception4);
             Assert.IsType<CheckFieldException>(exception4);
             Assert.Equal($"Check of the 'Server' field value [{host}] is failed: Dependency is unavailable on tcp://{host}:{port}", exception4.Message);
         }
@@ -335,6 +343,7 @@ namespace Lykke.SettingsReader.Test
             );
 
             Assert.NotNull(exception);
+            exception = GetBaseException(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", exception.Message);
         }
@@ -374,6 +383,7 @@ namespace Lykke.SettingsReader.Test
                 });
 
                 Assert.NotNull(exception);
+                exception = GetBaseException(exception);
                 Assert.IsType<CheckFieldException>(exception);
                 Assert.Equal($"Check of the 'ConnString' field value [{pair.Item2}] is failed: Dependency is unavailable on amqp://localhost:5672", exception.Message);
             }
@@ -399,6 +409,7 @@ namespace Lykke.SettingsReader.Test
                 });
 
                 Assert.NotNull(exception);
+                exception = GetBaseException(exception);
                 Assert.IsType<CheckFieldException>(exception);
                 Assert.Equal($"Check of the '{pair.Item1}' field value [{pair.Item2}] is failed: Dependency is unavailable on amqp://localhost:5672", exception.Message);
             }
@@ -425,6 +436,7 @@ namespace Lykke.SettingsReader.Test
             );
 
             Assert.NotNull(exception);
+            exception = GetBaseException(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'ConnString' field value [amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz] is failed: Invalid URI: Invalid port specified.", exception.Message);
         }
@@ -437,8 +449,16 @@ namespace Lykke.SettingsReader.Test
             );
 
             Assert.NotNull(exception);
+            exception = GetBaseException(exception);
             Assert.IsType<CheckFieldException>(exception);
             Assert.Equal("Check of the 'ConnString' field value [rabbit-registration.lykke-service.svc.cluster.local:5672] is failed: Wrong scheme in AMQP URI: rabbit-registration.lykke-service.svc.cluster.local", exception.Message);
+        }
+
+        private static Exception GetBaseException(Exception ex)
+        {
+            while (ex.InnerException != null)
+                ex = ex.InnerException;
+            return ex;
         }
     }
 }
