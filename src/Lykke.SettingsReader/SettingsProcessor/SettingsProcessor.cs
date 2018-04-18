@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
 
@@ -11,13 +12,29 @@ using Newtonsoft.Json.Linq;
 
 namespace Lykke.SettingsReader
 {
+    /// <summary>
+    /// Class for settings json parsing and validation.
+    /// </summary>
     public static partial class SettingsProcessor
     {
+        /// <summary>
+        /// Parses and validates settings json.
+        /// </summary>
+        /// <typeparam name="T">Type for parsing</typeparam>
+        /// <param name="json">Input json</param>
+        /// <returns>Parsed object of generic type T</returns>
         public static T Process<T>(string json)
         {
             return Process<T>(json, false);
         }
 
+        /// <summary>
+        /// Parses and validates settings json.
+        /// </summary>
+        /// <typeparam name="T">Type for parsing</typeparam>
+        /// <param name="json">Input json</param>
+        /// <param name="disableDependenciesCheck">Flag that can disable dependencies check</param>
+        /// <returns>Parsed object of generic type T</returns>
         public static T Process<T>(string json, bool disableDependenciesCheck)
         {
             if (string.IsNullOrEmpty(json))
@@ -100,14 +117,14 @@ namespace Lykke.SettingsReader
             }
         }
 
-        public static bool IsGenericEnumerable(Type type)
+        private static bool IsGenericEnumerable(Type type)
         {
             return type.GetTypeInfo().IsGenericType &&
                 type.GetTypeInfo().GetInterfaces().Any(
                 ti => (ti == typeof(IEnumerable<>) || ti.Name == "IEnumerable"));
         }
 
-        public static bool IsEnumerable(Type type)
+        private static bool IsEnumerable(Type type)
         {
             return IsGenericEnumerable(type) || type.IsArray;
         }
@@ -128,57 +145,61 @@ namespace Lykke.SettingsReader
                 return;
 
             Type objType = model.GetType();
-            PropertyInfo[] properties = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => !p.GetIndexParameters().Any()).ToArray();
+            PropertyInfo[] properties = objType
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => !p.GetIndexParameters().Any())
+                .ToArray();
 
-            foreach (PropertyInfo property in properties)
+            Parallel.ForEach(properties, p => CheckProperty(p, model));
+        }
+
+        private static void CheckProperty<T>(PropertyInfo property, T model)
+        {
+            if (!property.CanRead)
             {
-                if (!property.CanRead)
-                {
-                    Console.WriteLine($"Can't check {property.Name}. It has no Get method");
-                    continue;
-                }
-                object value = property.GetValue(model);
-                var checkAttribute = (BaseCheckAttribute)property.GetCustomAttribute(typeof(BaseCheckAttribute));
+                Console.WriteLine($"Can't check {property.Name}. It has no Get method");
+                return;
+            }
 
-                if (checkAttribute != null)
+            object value = property.GetValue(model);
+            var checkAttribute = (BaseCheckAttribute)property.GetCustomAttribute(typeof(BaseCheckAttribute));
+
+            if (checkAttribute != null)
+            {
+                var checker = checkAttribute.GetChecker();
+                string[] valuesToCheck = Array.Empty<string>();
+                switch (value)
                 {
-                    var checker = checkAttribute.GetChecker();
-                    string[] valuesToCheck = Array.Empty<string>();
-                    switch (value)
+                    case IReadOnlyList<string> strings:
+                        valuesToCheck = strings.ToArray();
+                        break;
+                    case string str:
+                        valuesToCheck = new[] { str };
+                        break;
+                }
+
+                foreach (string val in valuesToCheck)
+                {
+                    if (string.IsNullOrWhiteSpace(val))
                     {
-                        case IReadOnlyList<string> strings:
-                            valuesToCheck = strings.ToArray();
-                            break;
-                        case string str:
-                            valuesToCheck = new[] { str };
-                            break;
+                        var optionalAttribute = property.GetCustomAttribute(typeof(OptionalAttribute));
+                        if (optionalAttribute == null)
+                            throw new CheckFieldException(property.Name, val, "Empty setting value");
+                        continue;
                     }
 
-                    foreach (string val in valuesToCheck)
-                    {
-                        if (string.IsNullOrWhiteSpace(val))
-                        {
-                            var optionalAttribute = property.GetCustomAttribute(typeof(OptionalAttribute));
-                            if (optionalAttribute != null)
-                                continue;
-                            else
-                                throw new CheckFieldException(property.Name, val, "Empty setting value");
-                        }
-
-                        var checkResult = checker.CheckField(model, property.Name, val);
-                        Console.WriteLine(checkResult.Description);
-                        if (!checkResult.Result && checkResult.ThrowExceptionOnFail)
-                            throw new CheckFieldException(property.Name, val, $"Dependency is unavailable on {checkResult.Url}");
-                    }
+                    var checkResult = checker.CheckField(model, property.Name, val);
+                    Console.WriteLine(checkResult.Description);
+                    if (!checkResult.Result && checkResult.ThrowExceptionOnFail)
+                        throw new CheckFieldException(property.Name, val, $"Dependency is unavailable on {checkResult.Url}");
                 }
-                else if (property.CanWrite)
-                {
-                    object[] values = GetValuesToCheck(property, model);
+            }
+            else if (property.CanWrite)
+            {
+                object[] values = GetValuesToCheck(property, model);
 
-                    foreach (object val in values)
-                        ProcessChecks(val);
-                }
+                foreach (object val in values)
+                    ProcessChecks(val);
             }
         }
 
@@ -200,8 +221,7 @@ namespace Lykke.SettingsReader
                     }
                 }
             }
-            else
-            if (getMethod != null && getMethod.ReturnType != typeof(string) && GetGenericArgumentsOfAssignableType(getMethod.ReturnType, typeof(IReadOnlyDictionary<,>)).Any())
+            else if (getMethod != null && getMethod.ReturnType != typeof(string) && GetGenericArgumentsOfAssignableType(getMethod.ReturnType, typeof(IReadOnlyDictionary<,>)).Any())
             {
                 var dictObject = (IDictionary)getMethod.Invoke(model, null);
 
