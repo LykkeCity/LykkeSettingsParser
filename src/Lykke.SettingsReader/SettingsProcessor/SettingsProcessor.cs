@@ -166,7 +166,7 @@ namespace Lykke.SettingsReader
                 }
             });
 
-            return errorMessages.Count == 0 ? null : string.Join(",", errorMessages);
+            return errorMessages.Count == 0 ? null : string.Join(Environment.NewLine, errorMessages);
         }
 
         private static string CheckProperty<T>(PropertyInfo property, T model)
@@ -226,7 +226,7 @@ namespace Lykke.SettingsReader
                     }
                 });
 
-                return errorMessages.Count == 0 ? null : string.Join(",", errorMessages);
+                return errorMessages.Count == 0 ? null : string.Join(Environment.NewLine, errorMessages);
             }
             return null;
         }
