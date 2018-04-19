@@ -1,7 +1,4 @@
-﻿using System;
-using Lykke.SettingsReader.Exceptions;
-using Lykke.SettingsReader.Extensions;
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 
 namespace Lykke.SettingsReader.Checkers
 {
@@ -21,9 +18,9 @@ namespace Lykke.SettingsReader.Checkers
             {
                 factory = new ConnectionFactory { Uri = value };
             }
-            catch (Exception ex)
+            catch
             {
-                throw new CheckFieldException(propertyName, value, ex.Message);
+                return CheckFieldResult.Failed(propertyName, value, _throwExceptionOnFail);
             }
             var schema = factory.Ssl.Enabled ? "amqps" : "amqp";
             var url = $"{schema}://{factory.HostName}:{factory.Port}";

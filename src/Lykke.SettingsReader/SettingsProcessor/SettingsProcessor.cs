@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
@@ -55,7 +56,9 @@ namespace Lykke.SettingsReader
             if (!disableDependenciesCheck)
             {
                 Console.WriteLine("Checking services");
-                ProcessChecks(result);
+                string errorMessage = ProcessChecks(result);
+                if (errorMessage != null)
+                    throw new FailedDependenciesException(errorMessage);
                 Console.WriteLine("Checking services - Done.");
             }
 
@@ -139,10 +142,10 @@ namespace Lykke.SettingsReader
             return $"{path}.{propertyName}".Trim('.');
         }
 
-        private static void ProcessChecks<T>(T model)
+        private static string ProcessChecks<T>(T model)
         {
             if (model == null)
-                return;
+                return null;
 
             Type objType = model.GetType();
             PropertyInfo[] properties = objType
@@ -150,15 +153,28 @@ namespace Lykke.SettingsReader
                 .Where(p => !p.GetIndexParameters().Any())
                 .ToArray();
 
-            Parallel.ForEach(properties, p => CheckProperty(p, model));
+            var errorMessages = new List<string>();
+            Parallel.ForEach(properties, p =>
+            {
+                string errorMessage = CheckProperty(p, model);
+                if (errorMessage == null)
+                    return;
+
+                lock(errorMessages)
+                {
+                    errorMessages.Add(errorMessage);
+                }
+            });
+
+            return errorMessages.Count == 0 ? null : string.Join(Environment.NewLine, errorMessages);
         }
 
-        private static void CheckProperty<T>(PropertyInfo property, T model)
+        private static string CheckProperty<T>(PropertyInfo property, T model)
         {
             if (!property.CanRead)
             {
                 Console.WriteLine($"Can't check {property.Name}. It has no Get method");
-                return;
+                return null;
             }
 
             object value = property.GetValue(model);
@@ -191,16 +207,28 @@ namespace Lykke.SettingsReader
                     var checkResult = checker.CheckField(model, property.Name, val);
                     Console.WriteLine(checkResult.Description);
                     if (!checkResult.Result && checkResult.ThrowExceptionOnFail)
-                        throw new CheckFieldException(property.Name, val, $"Dependency is unavailable on {checkResult.Url}");
+                        return checkResult.Description;
                 }
             }
             else if (property.CanWrite)
             {
                 object[] values = GetValuesToCheck(property, model);
+                var errorMessages = new List<string>();
+                Parallel.ForEach(values, val =>
+                {
+                    string errorMessage = ProcessChecks(val);
+                    if (errorMessage == null)
+                        return;
 
-                foreach (object val in values)
-                    ProcessChecks(val);
+                    lock (errorMessages)
+                    {
+                        errorMessages.Add(errorMessage);
+                    }
+                });
+
+                return errorMessages.Count == 0 ? null : string.Join(Environment.NewLine, errorMessages);
             }
+            return null;
         }
 
         private static object[] GetValuesToCheck<T>(PropertyInfo property, T model)
@@ -209,7 +237,8 @@ namespace Lykke.SettingsReader
 
             var getMethod = property.GetGetMethod();
 
-            if (getMethod != null && getMethod.ReturnType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(getMethod.ReturnType))
+            if (getMethod != null && getMethod.ReturnType != typeof(string)
+                && typeof(IEnumerable).IsAssignableFrom(getMethod.ReturnType))
             {
                 var arrayObject = getMethod.Invoke(model, null);
 
@@ -221,7 +250,8 @@ namespace Lykke.SettingsReader
                     }
                 }
             }
-            else if (getMethod != null && getMethod.ReturnType != typeof(string) && GetGenericArgumentsOfAssignableType(getMethod.ReturnType, typeof(IReadOnlyDictionary<,>)).Any())
+            else if (getMethod != null && getMethod.ReturnType != typeof(string)
+                && GetGenericArgumentsOfAssignableType(getMethod.ReturnType, typeof(IReadOnlyDictionary<,>)).Any())
             {
                 var dictObject = (IDictionary)getMethod.Invoke(model, null);
 
@@ -235,8 +265,8 @@ namespace Lykke.SettingsReader
             }
             else
             {
-                if (property.PropertyType.IsClass && !property.PropertyType.IsValueType &&
-                    !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string)
+                if (property.PropertyType.IsClass && !property.PropertyType.IsValueType
+                    && !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string)
                     && property.PropertyType != typeof(object))
                 {
                     values.Add(property.GetValue(model));
