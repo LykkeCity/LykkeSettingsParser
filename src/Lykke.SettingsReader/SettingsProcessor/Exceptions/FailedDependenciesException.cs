@@ -10,5 +10,11 @@
             : base("Application dependencies check is failed.")
         {
         }
+
+        /// <summary>С-tor with exception message.</summary>
+        public FailedDependenciesException(string message)
+            : base($"Application dependencies check is failed: {message}")
+        {
+        }
     }
 }
