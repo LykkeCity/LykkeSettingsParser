@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
@@ -55,7 +56,8 @@ namespace Lykke.SettingsReader
             if (!disableDependenciesCheck)
             {
                 Console.WriteLine("Checking services");
-                ProcessChecks(result);
+                if (!ProcessChecks(result))
+                    throw new FailedDependenciesException();
                 Console.WriteLine("Checking services - Done.");
             }
 
@@ -139,10 +141,10 @@ namespace Lykke.SettingsReader
             return $"{path}.{propertyName}".Trim('.');
         }
 
-        private static void ProcessChecks<T>(T model)
+        private static bool ProcessChecks<T>(T model)
         {
             if (model == null)
-                return;
+                return true;
 
             Type objType = model.GetType();
             PropertyInfo[] properties = objType
@@ -150,15 +152,23 @@ namespace Lykke.SettingsReader
                 .Where(p => !p.GetIndexParameters().Any())
                 .ToArray();
 
-            Parallel.ForEach(properties, p => CheckProperty(p, model));
+            int notValidCount = 0;
+            Parallel.ForEach(properties, p =>
+            {
+                bool isValid = CheckProperty(p, model);
+                if (!isValid)
+                    Interlocked.Increment(ref notValidCount);
+            });
+
+            return notValidCount == 0;
         }
 
-        private static void CheckProperty<T>(PropertyInfo property, T model)
+        private static bool CheckProperty<T>(PropertyInfo property, T model)
         {
             if (!property.CanRead)
             {
                 Console.WriteLine($"Can't check {property.Name}. It has no Get method");
-                return;
+                return true;
             }
 
             object value = property.GetValue(model);
@@ -191,16 +201,18 @@ namespace Lykke.SettingsReader
                     var checkResult = checker.CheckField(model, property.Name, val);
                     Console.WriteLine(checkResult.Description);
                     if (!checkResult.Result && checkResult.ThrowExceptionOnFail)
-                        throw new CheckFieldException(property.Name, val, $"Dependency is unavailable on {checkResult.Url}");
+                        return false;
                 }
             }
             else if (property.CanWrite)
             {
                 object[] values = GetValuesToCheck(property, model);
-
+                bool result = true;
                 foreach (object val in values)
-                    ProcessChecks(val);
+                    result = result && ProcessChecks(val);
+                return result;
             }
+            return true;
         }
 
         private static object[] GetValuesToCheck<T>(PropertyInfo property, T model)

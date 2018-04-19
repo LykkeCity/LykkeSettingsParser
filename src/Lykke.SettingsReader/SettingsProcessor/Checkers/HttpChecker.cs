@@ -19,11 +19,11 @@ namespace Lykke.SettingsReader.Checkers
         {
             string url = GetFullUrl(value);
             if (string.IsNullOrEmpty(url))
-                throw new CheckFieldException(propertyName, value, "Invalid url");
+                return CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
 
             try
             {
-                using (var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) })
+                using (var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) })
                 {
                     using (var response = httpClient.GetAsync(url).GetAwaiter().GetResult())
                     {
