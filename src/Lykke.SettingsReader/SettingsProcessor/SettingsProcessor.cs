@@ -214,12 +214,18 @@ namespace Lykke.SettingsReader
             {
                 object[] values = GetValuesToCheck(property, model);
                 var errorMessages = new List<string>();
-                foreach (object val in values)
+                Parallel.ForEach(values, val =>
                 {
                     string errorMessage = ProcessChecks(val);
-                    if (errorMessage != null)
+                    if (errorMessage == null)
+                        return;
+
+                    lock (errorMessages)
+                    {
                         errorMessages.Add(errorMessage);
-                }
+                    }
+                });
+
                 return errorMessages.Count == 0 ? null : string.Join(",", errorMessages);
             }
             return null;
