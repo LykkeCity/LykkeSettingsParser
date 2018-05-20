@@ -151,17 +151,5 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
                 key = path.Substring(ind + 1);
             return key;
         }
-
-        private bool IsSimpleType(JTokenType type)
-        {
-            return type == JTokenType.Boolean
-                || type == JTokenType.Date
-                || type == JTokenType.Float
-                || type == JTokenType.Guid
-                || type == JTokenType.Integer
-                || type == JTokenType.String
-                || type == JTokenType.TimeSpan
-                || type == JTokenType.Uri;
-        }
     }
 }
