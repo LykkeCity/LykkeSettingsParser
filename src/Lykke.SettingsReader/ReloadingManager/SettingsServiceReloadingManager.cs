@@ -1,10 +1,11 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Lykke.SettingsReader.ReloadingManager.Configuration;
 
 namespace Lykke.SettingsReader
 {
-    public class SettingsServiceReloadingManager<TSettings> : ReloadingManagerBase<TSettings>
+    public class SettingsServiceReloadingManager<TSettings> : ReloadingManagerWithConfigurationBase<TSettings>
     {
         private readonly string _settingsUrl;
         private readonly Action<TSettings> _configure;
@@ -39,7 +40,9 @@ namespace Lykke.SettingsReader
             using (var httpClient = new HttpClient())
             {
                 var content = await httpClient.GetStringAsync(_settingsUrl);
-                var settings = SettingsProcessor.Process<TSettings>(content, _disableDependenciesCheck);
+                var processingResult = SettingsProcessor.ProcessForConfiguration<TSettings>(content, _disableDependenciesCheck);
+                var settings = processingResult.Item1;
+                SetSettingsConfigurationRoot(processingResult.Item2);
                 _configure?.Invoke(settings);
                 return settings;
             }

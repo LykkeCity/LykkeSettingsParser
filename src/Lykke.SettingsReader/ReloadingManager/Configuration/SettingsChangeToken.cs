@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Primitives;
 
-namespace Lykke.SettingsReader.ReloadingManager.LogConfiguration
+namespace Lykke.SettingsReader.ReloadingManager.Configuration
 {
     /// <summary>
     /// Provides Microsoft.Extensions.Primitives.IChangeToken functionality for LoggingConfiguration
