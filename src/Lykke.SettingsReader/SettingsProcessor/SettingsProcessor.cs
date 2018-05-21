@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
 using Newtonsoft.Json;
@@ -14,6 +15,7 @@ namespace Lykke.SettingsReader
     /// <summary>
     /// Class for settings json parsing and validation.
     /// </summary>
+    [PublicAPI]
     public static partial class SettingsProcessor
     {
         /// <summary>

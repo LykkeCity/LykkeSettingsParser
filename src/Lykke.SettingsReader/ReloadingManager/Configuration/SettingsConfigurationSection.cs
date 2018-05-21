@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using JetBrains.Annotations;
 
 namespace Lykke.SettingsReader.ReloadingManager.Configuration
 {
@@ -20,16 +21,19 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
         /// <summary>
         /// Gets the key this section occupies in its parent.
         /// </summary>
+        [NotNull]
         public string Key { get; private set; }
 
         /// <summary>
         /// Gets the full path to this section within the Microsoft.Extensions.Configuration.IConfiguration.
         /// </summary>
+        [NotNull]
         public string Path { get; private set; }
 
         /// <summary>
         /// Gets or sets the section value.
         /// </summary>
+        [CanBeNull]
         public string Value { get; set; }
 
         /// <summary>
@@ -37,10 +41,13 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
         /// </summary>
         /// <param name="key">The configuration key.</param>
         /// <returns>The configuration value.</returns>
-        public string this[string key]
+        [CanBeNull]
+        public string this[[NotNull] string key]
         {
             get
             {
+                if (key == null)
+                    throw new ArgumentNullException();
                 var item = _token[key];
                 if (item == null)
                     return null;
@@ -82,6 +89,7 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
         /// Gets the immediate descendant configuration sub-sections.
         /// </summary>
         /// <returns>The configuration sub-sections.</returns>
+        [NotNull]
         public IEnumerable<IConfigurationSection> GetChildren()
         {
             return _children
@@ -97,6 +105,7 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
         /// Returns a Microsoft.Extensions.Primitives.IChangeToken that can be used to observe when this configuration is reloaded.
         /// </summary>
         /// <returns>A Microsoft.Extensions.Primitives.IChangeToken.</returns>
+        [NotNull]
         public IChangeToken GetReloadToken()
         {
             return new SettingsChangeToken<T>(_manager);
@@ -109,8 +118,11 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
         /// <returns>The Microsoft.Extensions.Configuration.IConfigurationSection.</returns>
         /// <remarks>This method will never return null. If no matching sub-section is found with the specified key,
         /// an empty Microsoft.Extensions.Configuration.IConfigurationSection will be returned.</remarks>
-        public IConfigurationSection GetSection(string key)
+        [NotNull]
+        public IConfigurationSection GetSection([NotNull] string key)
         {
+            if (key == null)
+                throw new ArgumentNullException();
             JToken childToken = null;
             try
             {

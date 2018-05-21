@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace Lykke.SettingsReader
 {
@@ -7,6 +8,7 @@ namespace Lykke.SettingsReader
     /// Provides reloading functionality for any kind of data.
     /// </summary>
     /// <typeparam name="T">Type of data to be loaded/reloaded</typeparam>
+    [PublicAPI]
     public interface IReloadingManager<T>
     {
         /// <summary>

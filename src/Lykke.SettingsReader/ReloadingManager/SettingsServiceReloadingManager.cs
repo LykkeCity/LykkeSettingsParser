@@ -1,10 +1,12 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Lykke.SettingsReader.ReloadingManager.Configuration;
 
 namespace Lykke.SettingsReader
 {
+    [PublicAPI]
     public class SettingsServiceReloadingManager<TSettings> : ReloadingManagerWithConfigurationBase<TSettings>
     {
         private readonly string _settingsUrl;
