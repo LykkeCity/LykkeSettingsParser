@@ -11,7 +11,7 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
     /// <summary>
     /// Microsoft.Extensions.Configuration.IConfigurationSection implementation for logging configuration section
     /// </summary>
-    public sealed class SettingsConfigurationSection<T> : IConfigurationSection
+    internal class SettingsConfigurationSection<T> : IConfigurationSection
     {
         private readonly IReloadingManager<T> _manager;
         private readonly JToken _token;

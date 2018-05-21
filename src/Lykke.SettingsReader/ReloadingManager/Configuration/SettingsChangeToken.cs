@@ -7,12 +7,12 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
     /// <summary>
     /// Provides Microsoft.Extensions.Primitives.IChangeToken functionality for LoggingConfiguration
     /// </summary>
-    public class SettingsChangeToken<T> : IChangeToken
+    internal class SettingsChangeToken<T> : IChangeToken
     {
         /// <summary>
         /// Handles ChangeCallback unregistration for SettingsChangeToken
         /// </summary>
-        public class CallbackUnregisterHandler : IDisposable
+        internal class CallbackUnregisterHandler : IDisposable
         {
             private readonly Action _unregisterCallback;
 
@@ -65,7 +65,7 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
         /// <summary>
         /// C-tor
         /// </summary>
-        public SettingsChangeToken(IReloadingManager<T> manager)
+        internal SettingsChangeToken(IReloadingManager<T> manager)
         {
             _manager = manager;
             _lastChangeCheck = DateTime.UtcNow;

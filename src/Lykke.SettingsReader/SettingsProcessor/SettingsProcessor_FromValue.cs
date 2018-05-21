@@ -27,7 +27,7 @@ namespace Lykke.SettingsReader
 
             if (null == value)
             {
-                if (targetInfo.IsValueType)
+                if (targetInfo.IsValueType && (!targetInfo.IsGenericType || targetInfo.GetGenericTypeDefinition() != typeof(Nullable<>)))
                     throw new PropertyTypeNotAssignableFromNullException(path, targetType);
                 return null;
             }
@@ -36,7 +36,7 @@ namespace Lykke.SettingsReader
             {
                 if (targetInfo.GetGenericTypeDefinition() == typeof(Nullable<>))
                     // ReSharper disable once TailRecursiveCall
-                    return null == value ? null : Convert_FromValue(value, targetInfo.GenericTypeArguments[0], path);
+                    return Convert_FromValue(value, targetInfo.GenericTypeArguments[0], path);
 
                 throw new PropertyTypeNotSupportedException(path, targetType);
             }
