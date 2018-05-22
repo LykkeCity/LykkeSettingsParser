@@ -1,10 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+using Lykke.SettingsReader.ReloadingManager.Configuration;
 
 namespace Lykke.SettingsReader
 {
-    public class LocalSettingsReloadingManager<TSettings> : ReloadingManagerBase<TSettings>
+    [PublicAPI]
+    public class LocalSettingsReloadingManager<TSettings> : ReloadingManagerWithConfigurationBase<TSettings>
     {
         private readonly string _path;
 
@@ -23,7 +26,9 @@ namespace Lykke.SettingsReader
             using (var reader = File.OpenText(_path))
             {
                 var content = await reader.ReadToEndAsync();
-                return SettingsProcessor.Process<TSettings>(content);
+                var processingResult = SettingsProcessor.ProcessForConfiguration<TSettings>(content);
+                SetSettingsConfigurationRoot(processingResult.Item2);
+                return processingResult.Item1;
             }
         }
     }

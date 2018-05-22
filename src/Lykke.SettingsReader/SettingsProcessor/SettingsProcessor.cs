@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -16,6 +15,7 @@ namespace Lykke.SettingsReader
     /// <summary>
     /// Class for settings json parsing and validation.
     /// </summary>
+    [PublicAPI]
     public static partial class SettingsProcessor
     {
         /// <summary>
@@ -26,7 +26,7 @@ namespace Lykke.SettingsReader
         /// <returns>Parsed object of generic type T</returns>
         public static T Process<T>(string json)
         {
-            return Process<T>(json, false);
+            return ProcessForConfiguration<T>(json, false).Item1;
         }
 
         /// <summary>
@@ -37,6 +37,29 @@ namespace Lykke.SettingsReader
         /// <param name="disableDependenciesCheck">Flag that can disable dependencies check</param>
         /// <returns>Parsed object of generic type T</returns>
         public static T Process<T>(string json, bool disableDependenciesCheck)
+        {
+            return ProcessForConfiguration<T>(json, disableDependenciesCheck).Item1;
+        }
+
+        /// <summary>
+        /// Parses and validates settings json.
+        /// </summary>
+        /// <typeparam name="T">Type for parsing</typeparam>
+        /// <param name="json">Input json</param>
+        /// <returns>Parsed object of generic type T and parsed JToken object for settings json</returns>
+        public static (T, JToken) ProcessForConfiguration<T>(string json)
+        {
+            return ProcessForConfiguration<T>(json, false);
+        }
+
+        /// <summary>
+        /// Parses and validates settings json.
+        /// </summary>
+        /// <typeparam name="T">Type for parsing</typeparam>
+        /// <param name="json">Input json</param>
+        /// <param name="disableDependenciesCheck">Flag that can disable dependencies check</param>
+        /// <returns>Parsed object of generic type T and parsed JToken object for settings json</returns>
+        public static (T, JToken) ProcessForConfiguration<T>(string json, bool disableDependenciesCheck)
         {
             if (string.IsNullOrEmpty(json))
                 throw new JsonStringEmptyException();
@@ -62,12 +85,12 @@ namespace Lykke.SettingsReader
                 Console.WriteLine("Checking services - Done.");
             }
 
-            return result;
+            return (result, jsonObj);
         }
 
-        private static T FillChildrenFields<T>(JToken jsonObj, string path = "")
+        private static T FillChildrenFields<T>(JToken jsonObj)
         {
-            return (T)Convert(jsonObj, typeof(T), path);
+            return (T)Convert(jsonObj, typeof(T), "");
         }
 
         private static object Convert(JToken jsonObj, Type targetType, string path)

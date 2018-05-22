@@ -8,7 +8,7 @@ namespace Lykke.SettingsReader
     {
         public static readonly string DefaultConfigurationKey = "SettingsUrl";
 
-        public static IReloadingManager<TSettings> LoadSettings<TSettings>(
+        public static IReloadingManagerWithConfiguration<TSettings> LoadSettings<TSettings>(
             this IConfiguration configuration,
             string key = null,
             Action<TSettings> configure = null
@@ -31,7 +31,7 @@ namespace Lykke.SettingsReader
             return new LocalSettingsReloadingManager<TSettings>(settingsUrl);
         }
 
-        public static IReloadingManager<TSettings> LoadSettings<TSettings>(
+        public static IReloadingManagerWithConfiguration<TSettings> LoadSettings<TSettings>(
             this IConfiguration configuration,
             string key,
             bool disableDependenciesCheck)
