@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Lykke.SettingsReader</PackageId>
@@ -14,30 +13,26 @@
     <RepositoryUrl>https://github.com/LykkeCity/LykkeSettingsParser.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\netstandard2.0\Lykke.SettingsReader.xml</DocumentationFile>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\netstandard2.0\Lykke.SettingsReader.xml</DocumentationFile>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="RabbitMQ.Client" Version="4.1.1" />
     <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.0" PrivateAssets="All" />
     <PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
     <PackageReference Include="WindowsAzure.Storage" Version="9.0.0" />
   </ItemGroup>
-
   <ItemGroup Label="dotnet pack instructions">
     <Content Include="$(OutputPath)$(AssemblyName).pdb">
       <Pack>true</Pack>
       <PackagePath>lib/netstandard2.0</PackagePath>
     </Content>
   </ItemGroup>
-
 </Project>
