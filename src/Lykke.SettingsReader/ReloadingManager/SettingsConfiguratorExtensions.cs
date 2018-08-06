@@ -32,10 +32,10 @@ namespace Lykke.SettingsReader
         }
 
         public static Task CheckDependenciesAsync<TSettings>(
-            this IConfiguration configuration, TSettings settings, string slackConnString, string queueName)
+            this IConfiguration configuration, TSettings settings, string slackConnString, string queueName, string sender)
             where TSettings : class
         {
-            return SettingsProcessor.CheckDependenciesAsync(settings, slackConnString, queueName);
+            return SettingsProcessor.CheckDependenciesAsync(settings, slackConnString, queueName, sender);
         }
     }
 }

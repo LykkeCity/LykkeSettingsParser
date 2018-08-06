@@ -23,6 +23,7 @@ namespace Lykke.SettingsReader
     public static partial class SettingsProcessor
     {
         private static CloudQueue _queue;
+        private static string _sender;
 
         /// <summary>
         /// Parses and validates settings json.
@@ -64,17 +65,19 @@ namespace Lykke.SettingsReader
         /// <summary>
         /// Checks dependencies
         /// </summary>
-        /// <param name="model"></param>
-        /// <param name="slackConnString"></param>
-        /// <param name="queueName"></param>
+        /// <param name="model">model to check dependenices for</param>
+        /// <param name="slackConnString">connection string for slack to send failed dependecy message</param>
+        /// <param name="queueName">queue name to send failed message</param>
+        /// <param name="sender">name of the sender</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static async Task<string> CheckDependenciesAsync<T>(T model, string slackConnString, string queueName)
+        public static async Task<string> CheckDependenciesAsync<T>(T model, string slackConnString, string queueName, string sender)
         {
             var account = CloudStorageAccount.Parse(slackConnString);
             var client = account.CreateCloudQueueClient();
             _queue = client.GetQueueReference(queueName);
-            _queue.CreateIfNotExistsAsync().GetAwaiter().GetResult();
+            _sender = sender;
+            await _queue.CreateIfNotExistsAsync();
 
             Console.WriteLine("Start checking services...");
             string errorMessages = await ProcessChecks(model);
@@ -268,7 +271,7 @@ namespace Lykke.SettingsReader
             return _queue.AddMessageAsync(new CloudQueueMessage(new
             {
                 Type = "Monitor",
-                Sender = "Test",
+                Sender = _sender,
                 Message = message
             }.ToJson()));
         }

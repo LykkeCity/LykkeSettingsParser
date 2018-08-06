@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Lykke.SettingsReader.Test.Models.CheckAttributes;
 using Xunit;
 
@@ -30,9 +28,9 @@ namespace Lykke.SettingsReader.Test
             var settings = SettingsProcessor.Process<TestHttpCheckServicesModel>(sb.ToString());
 
             string connString = "";
-            string queueName = "";
+            string queueName = "test-queue";
             
-            SettingsProcessor.CheckDependenciesAsync(settings, connString, queueName);
+            SettingsProcessor.CheckDependenciesAsync(settings, connString, queueName, "SettingsReader.Tests");
         }
     }
 }
