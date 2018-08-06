@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 namespace Lykke.SettingsReader
@@ -31,22 +31,11 @@ namespace Lykke.SettingsReader
             return new LocalSettingsReloadingManager<TSettings>(settingsUrl);
         }
 
-        public static IReloadingManagerWithConfiguration<TSettings> LoadSettings<TSettings>(
-            this IConfiguration configuration,
-            string key,
-            bool disableDependenciesCheck)
+        public static Task CheckDependenciesAsync<TSettings>(
+            this IConfiguration configuration, TSettings settings, string slackConnString, string queueName)
             where TSettings : class
         {
-            key = key ?? DefaultConfigurationKey;
-            var settingsUrl = configuration[key];
-
-            if (string.IsNullOrEmpty(settingsUrl))
-                throw new InvalidOperationException($"The connection string to the settings was not found by configuration key '{key}'");
-
-            if (settingsUrl.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
-                return new SettingsServiceReloadingManager<TSettings>(settingsUrl, disableDependenciesCheck);
-
-            return new LocalSettingsReloadingManager<TSettings>(settingsUrl);
+            return SettingsProcessor.CheckDependenciesAsync(settings, slackConnString, queueName);
         }
     }
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Test.Models;
 using Lykke.SettingsReader.Test.Models.CheckAttributes;
@@ -365,15 +367,18 @@ namespace Lykke.SettingsReader.Test
                 ("RoCollection", "amqp://guest:guest@localhost:5672"),
                 ("Enumerable", "amqp://guest:guest@localhost:5672")
             };
+            
             foreach (var pair in checkList)
             {
-                var exception = Record.Exception(() =>
+                using (StringWriter sw = new StringWriter())
                 {
-                    SettingsProcessor.Process<TestAmqpCheckArrayModel>($"{{'{pair.Item1}': [{{'ConnString': '{pair.Item2}'}}] }}");
-                });
+                    Console.SetOut(sw);
 
-                Assert.NotNull(exception);
-                Assert.IsType<FailedDependenciesException>(exception);
+                    SettingsProcessor.Process<TestAmqpCheckArrayModel>($"{{'{pair.Item1}': [{{'ConnString': '{pair.Item2}'}}] }}");
+
+                    Thread.Sleep(10000);
+                    Assert.Contains("Failed", sw.ToString());
+                }
             }
         }
 
