@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using Lykke.SettingsReader.Exceptions;
 using Lykke.SettingsReader.Test.Models;
 using Lykke.SettingsReader.Test.Models.CheckAttributes;
@@ -206,19 +205,17 @@ namespace Lykke.SettingsReader.Test
         }
 
         [Fact]
-        public void HttpCheckAttribute_IsInvalidUrl()
+        public async Task HttpCheckAttribute_IsInvalidUrl()
         {
-            var exception = Record.Exception(() =>
-                SettingsProcessor.Process<TestHttpCheckModel>(
-                    $"{{'Service': {{'ServiceUrl': 'not_url_at_all'}}, 'Url': '{_serviceUrl}/', 'Port':5672, 'Num': 1234}}")
-            );
+            var settings = SettingsProcessor.Process<TestHttpCheckModel>(
+                    $"{{'Service': {{'ServiceUrl': 'not_url_at_all'}}, 'Url': '{_serviceUrl}/', 'Port':5672, 'Num': 1234}}");
 
-            Assert.NotNull(exception);
-            Assert.IsType<FailedDependenciesException>(exception);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            Assert.Contains("Failed", message);
         }
 
         [Fact]
-        public void TcpCheckAttribute_IsArrayOk()
+        public async Task TcpCheckAttribute_IsArrayOk()
         {
             var checkList = new List<(string, string)>
             {
@@ -229,20 +226,18 @@ namespace Lykke.SettingsReader.Test
                 ("RoCollection", "127.0.0.1:5672"),
                 ("Enumerable", "127.0.0.1:5672")
             };
+            
             foreach (var pair in checkList)
             {
-                var exception = Record.Exception(() =>
-                {
-                    SettingsProcessor.Process<TestTcpCheckArrayModel>($"{{'{pair.Item1}': [{{'HostPort': '{pair.Item2}'}}] }}");
-                });
-
-                Assert.NotNull(exception);
-                Assert.IsType<FailedDependenciesException>(exception);
+                var settings = SettingsProcessor.Process<TestTcpCheckArrayModel>($"{{'{pair.Item1}': [{{'HostPort': '{pair.Item2}'}}] }}");
+                
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+                Assert.Contains("Failed", message);
             }
         }
 
         [Fact]
-        public void TcpCheckAttribute_IsListOk()
+        public async Task TcpCheckAttribute_IsListOk()
         {
             var checkList = new List<(string, string)>
             {
@@ -255,13 +250,10 @@ namespace Lykke.SettingsReader.Test
             };
             foreach (var pair in checkList)
             {
-                var exception = Record.Exception(() =>
-                {
-                    SettingsProcessor.Process<TestTcpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
-                });
-
-                Assert.NotNull(exception);
-                Assert.IsType<FailedDependenciesException>(exception);
+                var settings = SettingsProcessor.Process<TestTcpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
+                
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+                Assert.Contains("Failed", message);
             }
         }
 
@@ -279,65 +271,49 @@ namespace Lykke.SettingsReader.Test
         }
 
         [Fact]
-        public void TcpCheckAttribute_IsInvalidPort()
+        public async Task TcpCheckAttribute_IsInvalidPort()
         {
-            var exception = Record.Exception(() =>
-                    SettingsProcessor.Process<TestTcpCheckModel>("{'HostInfo': {'HostPort': '127.0.0.1:zzz'}, 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}")
-            );
+            var settings = SettingsProcessor.Process<TestTcpCheckModel>(
+                "{'HostInfo': {'HostPort': '127.0.0.1:zzz'}, 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}");
 
-            Assert.NotNull(exception);
-            exception = GetBaseException(exception);
-            Assert.IsType<CheckFieldException>(exception);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            Assert.Contains("Invalid port", message);
         }
 
         [Fact]
-        public void TcpCheckAttribute_IsInvalidPortValue()
+        public async Task TcpCheckAttribute_IsInvalidPortValue()
         {
             const string host = "127.0.0.1";
             const int port = 5672;
 
-            var exception1 = Record.Exception(() =>
-                SettingsProcessor.Process<TestTcpCheckModel>($"{{'HostInfo': {{'HostPort': '{host}:{port}'}} }}")
-            );
+            var settings =
+                SettingsProcessor.Process<TestTcpCheckModel>($"{{'HostInfo': {{'HostPort': '{host}:{port}'}} }}");
 
-            Assert.NotNull(exception1);
-            Assert.IsType<FailedDependenciesException>(exception1);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            Assert.Contains("Failed", message);
 
-            var exception2 = Record.Exception(() =>
-                SettingsProcessor.Process<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': 'not a port'}}")
-            );
+            settings = SettingsProcessor.Process<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': 'not a port'}}");
 
-            Assert.NotNull(exception2);
-            exception2 = GetBaseException(exception2);
-            Assert.IsType<CheckFieldException>(exception2);
-            Assert.Equal($"Check of the 'Host' field value [{host}] is failed: Invalid port value in property 'Port'", exception2.Message);
+            message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            Assert.Equal($"Check of the 'Host' field value [{host}] is failed: Invalid port value in property 'Port'", message);
 
+            settings = SettingsProcessor.Process<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': '{port}'}}");
 
-            var exception3 = Record.Exception(() =>
-                SettingsProcessor.Process<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': '{port}'}}")
-            );
+            message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            Assert.Contains("Failed", message);
 
-            Assert.NotNull(exception3);
-            Assert.IsType<FailedDependenciesException>(exception3);
+            settings = SettingsProcessor.Process<TestTcpCheckModel>($"{{'Server': '{host}'}}");
 
-            var exception4 = Record.Exception(() =>
-                SettingsProcessor.Process<TestTcpCheckModel>($"{{'Server': '{host}'}}")
-            );
-
-            Assert.NotNull(exception4);
-            Assert.IsType<FailedDependenciesException>(exception4);
+            message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            Assert.Contains("Failed", message);
         }
 
         [Fact]
-        public void TcpCheckAttribute_WrongPortProperty()
+        public async Task TcpCheckAttribute_WrongPortProperty()
         {
-            var exception = Record.Exception(() =>
-                SettingsProcessor.Process<WrongTestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}")
-            );
-
-            Assert.NotNull(exception);
-            exception = GetBaseException(exception);
-            Assert.IsType<CheckFieldException>(exception);
+            var settings = SettingsProcessor.Process<WrongTestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}");
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", message);
         }
 
         /*
@@ -356,7 +332,7 @@ namespace Lykke.SettingsReader.Test
         */
 
         [Fact]
-        public void AmqpCheckAttribute_IsArrayOk()
+        public async Task AmqpCheckAttribute_IsArrayOk()
         {
             var checkList = new List<(string, string)>
             {
@@ -370,20 +346,14 @@ namespace Lykke.SettingsReader.Test
             
             foreach (var pair in checkList)
             {
-                using (StringWriter sw = new StringWriter())
-                {
-                    Console.SetOut(sw);
-
-                    SettingsProcessor.Process<TestAmqpCheckArrayModel>($"{{'{pair.Item1}': [{{'ConnString': '{pair.Item2}'}}] }}");
-
-                    Thread.Sleep(10000);
-                    Assert.Contains("Failed", sw.ToString());
-                }
+                var settings = SettingsProcessor.Process<TestAmqpCheckArrayModel>($"{{'{pair.Item1}': [{{'ConnString': '{pair.Item2}'}}] }}");
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+                Assert.Contains("Failed", message);
             }
         }
 
         [Fact]
-        public void AmqpCheckAttribute_IsListOk()
+        public async Task AmqpCheckAttribute_IsListOk()
         {
             var checkList = new List<(string, string)>
             {
@@ -396,13 +366,10 @@ namespace Lykke.SettingsReader.Test
             };
             foreach (var pair in checkList)
             {
-                var exception = Record.Exception(() =>
-                {
-                    SettingsProcessor.Process<TestAmqpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
-                });
-
-                Assert.NotNull(exception);
-                Assert.IsType<FailedDependenciesException>(exception);
+                var settings = SettingsProcessor.Process<TestAmqpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
+                
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+                Assert.Contains("Failed", message);
             }
         }
 
@@ -420,25 +387,23 @@ namespace Lykke.SettingsReader.Test
         }
 
         [Fact]
-        public void AmqpCheckAttribute_IsInvalidPort()
+        public async Task AmqpCheckAttribute_IsInvalidPort()
         {
-            var exception = Record.Exception(() =>
-                    SettingsProcessor.Process<TestAmqpCheckModel>("{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz'}}")
-            );
-
-            Assert.NotNull(exception);
-            Assert.IsType<FailedDependenciesException>(exception);
+            var settings = SettingsProcessor.Process<TestAmqpCheckModel>(
+                "{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz'}}");
+            
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            Assert.Contains("Failed", message);
         }
 
         [Fact]
-        public void AmqpCheckAttribute_IsInvalidConnectionString()
+        public async Task AmqpCheckAttribute_IsInvalidConnectionString()
         {
-            var exception = Record.Exception(() =>
-                SettingsProcessor.Process<TestAmqpCheckModel>("{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'rabbit-registration.lykke-service.svc.cluster.local:5672'}}")
-            );
+            var settings = SettingsProcessor.Process<TestAmqpCheckModel>(
+                "{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'rabbit-registration.lykke-service.svc.cluster.local:5672'}}");
 
-            Assert.NotNull(exception);
-            Assert.IsType<FailedDependenciesException>(exception);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            Assert.Contains("Failed", message);
         }
 
         private static Exception GetBaseException(Exception ex)

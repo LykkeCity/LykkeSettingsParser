@@ -11,6 +11,7 @@ using Lykke.SettingsReader.Exceptions;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using MongoDB.Bson;
+using MongoDB.Driver;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -22,7 +23,7 @@ namespace Lykke.SettingsReader
     [PublicAPI]
     public static partial class SettingsProcessor
     {
-        private static CloudQueue _queue;
+        private static CloudQueue _queue = null;
         private static string _sender;
 
         /// <summary>
@@ -71,19 +72,32 @@ namespace Lykke.SettingsReader
         /// <param name="sender">name of the sender</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static async Task<string> CheckDependenciesAsync<T>(T model, string slackConnString, string queueName, string sender)
+        public static async Task<string> CheckDependenciesAsync<T>(T model, string slackConnString = null, string queueName = null, string sender = null)
         {
-            var account = CloudStorageAccount.Parse(slackConnString);
-            var client = account.CreateCloudQueueClient();
-            _queue = client.GetQueueReference(queueName);
-            _sender = sender;
-            await _queue.CreateIfNotExistsAsync();
+            if (!string.IsNullOrEmpty(slackConnString) && !string.IsNullOrEmpty(queueName))
+            {
+                var account = CloudStorageAccount.Parse(slackConnString);
+                var client = account.CreateCloudQueueClient();
+                _queue = client.GetQueueReference(queueName);
+                _sender = sender;
+                await _queue.CreateIfNotExistsAsync();
+            }
 
-            Console.WriteLine("Start checking services...");
-            string errorMessages = await ProcessChecks(model);
-            Console.WriteLine(string.IsNullOrEmpty(errorMessages)
-                ? "Services checked. OK"
-                : $"Services checked:{Environment.NewLine}{errorMessages} ");
+            string errorMessages;
+
+            try
+            {
+                Console.WriteLine("Start checking services...");
+                errorMessages = await ProcessChecks(model);
+                Console.WriteLine(string.IsNullOrEmpty(errorMessages)
+                    ? "Services checked. OK"
+                    : $"Services checked:{Environment.NewLine}{errorMessages} ");
+            }
+            catch(Exception ex)
+            {
+                errorMessages = ex.Message;
+            }
+            
             return errorMessages;
         }
         
@@ -246,17 +260,17 @@ namespace Lykke.SettingsReader
 
             int retryCount = 0;
             CheckFieldResult checkResult;
-            
+
             do
             {
                 if (retryCount > 0)
                     Thread.Sleep(100);
-                    
+
                 checkResult = checker.CheckField(model, property.Name, val);
                 retryCount++;
 
             } while (!checkResult.Result && retryCount < 3);
-
+            
             if (!checkResult.Result)
             {
                 await SendSlackNotification(checkResult.Description);
@@ -268,6 +282,9 @@ namespace Lykke.SettingsReader
 
         private static Task SendSlackNotification(string message)
         {
+            if (_queue == null)
+                return Task.CompletedTask;
+            
             return _queue.AddMessageAsync(new CloudQueueMessage(new
             {
                 Type = "Monitor",
