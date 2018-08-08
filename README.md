@@ -5,6 +5,8 @@ First of all, ```SettingsUrl``` environment variable should contains URL or path
 Next, there is the only one static generic method, which you need to load the settings:
 ```cs
  var model = Configuration.LoadSettings<ModelClass>();
+ //to check dependencies at startup add the following:
+ Configuration.CheckDependenciesAsync(model,slackConnString, slackQueueName, senderName);
 ```
 ## Using optional properties
 If your model assume to have fields which could be filled or not you can always use the `[Optional]` attribute. In this case if your json string is not contain the field, exception won't be threw.

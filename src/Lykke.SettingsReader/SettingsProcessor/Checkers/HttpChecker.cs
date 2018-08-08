@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net.Http;
-using Lykke.SettingsReader.Exceptions;
+using Lykke.SettingsReader.Helpers;
 
 namespace Lykke.SettingsReader.Checkers
 {
@@ -18,22 +18,22 @@ namespace Lykke.SettingsReader.Checkers
         public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
             string url = GetFullUrl(value);
+            
             if (string.IsNullOrEmpty(url))
                 return CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
 
             try
             {
-                using (var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) })
+                bool checkResult;
+                
+                using (var response = HttpClientProvider.Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult())
                 {
-                    using (var response = httpClient.GetAsync(url).GetAwaiter().GetResult())
-                    {
-                        bool checkResult = response.IsSuccessStatusCode;
-                        return checkResult
-                            ? CheckFieldResult.Ok(propertyName, url)
-                            : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
-                    }
+                    checkResult = response.IsSuccessStatusCode;
                 }
 
+                return checkResult
+                    ? CheckFieldResult.Ok(propertyName, url)
+                    : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
             }
             catch (Exception)
             {

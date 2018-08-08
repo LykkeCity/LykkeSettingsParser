@@ -7,8 +7,13 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Queue;
+using MongoDB.Bson;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Polly;
+using Polly.Retry;
 
 namespace Lykke.SettingsReader
 {
@@ -18,6 +23,13 @@ namespace Lykke.SettingsReader
     [PublicAPI]
     public static partial class SettingsProcessor
     {
+        private static CloudQueue _queue;
+        private static string _sender;
+        private static RetryPolicy<CheckFieldResult> _retry = Policy
+            .Handle<Exception>()
+            .OrResult<CheckFieldResult>(r => !r.Result)
+            .WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(100));
+
         /// <summary>
         /// Parses and validates settings json.
         /// </summary>
@@ -26,19 +38,7 @@ namespace Lykke.SettingsReader
         /// <returns>Parsed object of generic type T</returns>
         public static T Process<T>(string json)
         {
-            return ProcessForConfiguration<T>(json, false).Item1;
-        }
-
-        /// <summary>
-        /// Parses and validates settings json.
-        /// </summary>
-        /// <typeparam name="T">Type for parsing</typeparam>
-        /// <param name="json">Input json</param>
-        /// <param name="disableDependenciesCheck">Flag that can disable dependencies check</param>
-        /// <returns>Parsed object of generic type T</returns>
-        public static T Process<T>(string json, bool disableDependenciesCheck)
-        {
-            return ProcessForConfiguration<T>(json, disableDependenciesCheck).Item1;
+            return ProcessForConfiguration<T>(json).Item1;
         }
 
         /// <summary>
@@ -48,18 +48,6 @@ namespace Lykke.SettingsReader
         /// <param name="json">Input json</param>
         /// <returns>Parsed object of generic type T and parsed JToken object for settings json</returns>
         public static (T, JToken) ProcessForConfiguration<T>(string json)
-        {
-            return ProcessForConfiguration<T>(json, false);
-        }
-
-        /// <summary>
-        /// Parses and validates settings json.
-        /// </summary>
-        /// <typeparam name="T">Type for parsing</typeparam>
-        /// <param name="json">Input json</param>
-        /// <param name="disableDependenciesCheck">Flag that can disable dependencies check</param>
-        /// <returns>Parsed object of generic type T and parsed JToken object for settings json</returns>
-        public static (T, JToken) ProcessForConfiguration<T>(string json, bool disableDependenciesCheck)
         {
             if (string.IsNullOrEmpty(json))
                 throw new JsonStringEmptyException();
@@ -76,18 +64,51 @@ namespace Lykke.SettingsReader
 
             var result = FillChildrenFields<T>(jsonObj);
 
-            if (!disableDependenciesCheck)
-            {
-                Console.WriteLine("Checking services");
-                string errorMessage = ProcessChecks(result);
-                if (errorMessage != null)
-                    throw new FailedDependenciesException(errorMessage);
-                Console.WriteLine("Checking services - Done.");
-            }
-
             return (result, jsonObj);
         }
 
+        /// <summary>
+        /// Checks dependencies
+        /// </summary>
+        /// <param name="model">model to check dependenices for</param>
+        /// <param name="slackConnString">connection string for slack to send failed dependecy message</param>
+        /// <param name="queueName">queue name to send failed message</param>
+        /// <param name="sender">name of the sender</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static async Task<string> CheckDependenciesAsync<T>(T model, string slackConnString = null, string queueName = null, string sender = null)
+        {
+            if (!string.IsNullOrEmpty(slackConnString) && !string.IsNullOrEmpty(queueName))
+            {
+                var account = CloudStorageAccount.Parse(slackConnString);
+                var client = account.CreateCloudQueueClient();
+                _queue = client.GetQueueReference(queueName);
+                _sender = sender;
+                await _queue.CreateIfNotExistsAsync();
+            }
+
+            string errorMessages;
+
+            try
+            {
+                Console.WriteLine("Start checking services...");
+                errorMessages = await ProcessChecksAsync(model);
+                Console.WriteLine(string.IsNullOrEmpty(errorMessages)
+                    ? "Services checked. OK"
+                    : $"Services checked:{Environment.NewLine}{errorMessages} ");
+            }
+            catch (CheckFieldException)
+            {
+                throw;
+            }
+            catch(Exception ex)
+            {
+                errorMessages = ex.Message;
+            }
+            
+            return errorMessages;
+        }
+        
         private static T FillChildrenFields<T>(JToken jsonObj)
         {
             return (T)Convert(jsonObj, typeof(T), "");
@@ -127,20 +148,17 @@ namespace Lykke.SettingsReader
                 res.Add(Convert(elem, childType, propertyPath));
             }
 
-            if (targetType.IsArray)
-            {
-                var arr = Array.CreateInstance(targetType.GetElementType(), res.Count);
-                for (var ii = 0; ii < res.Count; ii++)
-                {
-                    arr.SetValue(res[ii], ii);
-                }
-                return arr;
-
-            }
-            else
-            {
+            if (!targetType.IsArray) 
                 return res;
+            
+            var arr = Array.CreateInstance(targetType.GetElementType(), res.Count);
+            
+            for (var ii = 0; ii < res.Count; ii++)
+            {
+                arr.SetValue(res[ii], ii);
             }
+            
+            return arr;
         }
 
         private static bool IsGenericEnumerable(Type type)
@@ -165,7 +183,7 @@ namespace Lykke.SettingsReader
             return $"{path}.{propertyName}".Trim('.');
         }
 
-        private static string ProcessChecks<T>(T model)
+        private static async Task<string> ProcessChecksAsync<T>(T model)
         {
             if (model == null)
                 return null;
@@ -176,23 +194,16 @@ namespace Lykke.SettingsReader
                 .Where(p => !p.GetIndexParameters().Any())
                 .ToArray();
 
-            var errorMessages = new List<string>();
-            Parallel.ForEach(properties, p =>
-            {
-                string errorMessage = CheckProperty(p, model);
-                if (errorMessage == null)
-                    return;
+            var tasks = properties.Select(p => CheckPropertyAsync(p, model)).ToList();
 
-                lock(errorMessages)
-                {
-                    errorMessages.Add(errorMessage);
-                }
-            });
-
+            var errorMessages = (await Task.WhenAll(tasks))
+                .Where(item => !string.IsNullOrEmpty(item))
+                .ToList();
+            
             return errorMessages.Count == 0 ? null : string.Join(Environment.NewLine, errorMessages);
         }
 
-        private static string CheckProperty<T>(PropertyInfo property, T model)
+        private static async Task<string> CheckPropertyAsync<T>(PropertyInfo property, T model)
         {
             if (!property.CanRead)
             {
@@ -203,6 +214,9 @@ namespace Lykke.SettingsReader
             object value = property.GetValue(model);
             var checkAttribute = (BaseCheckAttribute)property.GetCustomAttribute(typeof(BaseCheckAttribute));
 
+            List<string> errorMessages;
+            List<Task<string>> tasks;
+            
             if (checkAttribute != null)
             {
                 var checker = checkAttribute.GetChecker();
@@ -217,41 +231,68 @@ namespace Lykke.SettingsReader
                         break;
                 }
 
-                foreach (string val in valuesToCheck)
-                {
-                    if (string.IsNullOrWhiteSpace(val))
-                    {
-                        var optionalAttribute = property.GetCustomAttribute(typeof(OptionalAttribute));
-                        if (optionalAttribute == null)
-                            throw new CheckFieldException(property.Name, val, "Empty setting value");
-                        continue;
-                    }
+                tasks = valuesToCheck.Select(val => DoCheckAsync(model, property, checker, val)).ToList();
 
-                    var checkResult = checker.CheckField(model, property.Name, val);
-                    Console.WriteLine(checkResult.Description);
-                    if (!checkResult.Result && checkResult.ThrowExceptionOnFail)
-                        return checkResult.Description;
-                }
-            }
-            else if (property.CanWrite)
-            {
-                object[] values = GetValuesToCheck(property, model);
-                var errorMessages = new List<string>();
-                Parallel.ForEach(values, val =>
-                {
-                    string errorMessage = ProcessChecks(val);
-                    if (errorMessage == null)
-                        return;
-
-                    lock (errorMessages)
-                    {
-                        errorMessages.Add(errorMessage);
-                    }
-                });
+                errorMessages = (await Task.WhenAll(tasks))
+                    .Where(item => !string.IsNullOrEmpty(item))
+                    .ToList();
 
                 return errorMessages.Count == 0 ? null : string.Join(Environment.NewLine, errorMessages);
             }
-            return null;
+
+            if (!property.CanWrite) 
+                return null;
+            
+            object[] values = GetValuesToCheck(property, model);
+
+            tasks = values.Select(ProcessChecksAsync).ToList();
+
+            errorMessages = (await Task.WhenAll(tasks))
+                .Where(item => !string.IsNullOrEmpty(item))
+                .ToList();
+            
+            return errorMessages.Count == 0 ? null : string.Join(Environment.NewLine, errorMessages);
+        }
+
+        private static async Task<string> DoCheckAsync<T>(T model, PropertyInfo property, ISettingsFieldChecker checker, string val)
+        {
+            if (string.IsNullOrWhiteSpace(val))
+            {
+                var optionalAttribute = property.GetCustomAttribute(typeof(OptionalAttribute));
+                
+                if (optionalAttribute == null)
+                    throw new CheckFieldException(property.Name, val, "Empty setting value");
+                
+                return null;
+            }
+
+            CheckFieldResult checkResult = await _retry.ExecuteAsync(() => Task.FromResult(checker.CheckField(model, property.Name, val)));
+
+            if (checkResult.Result) 
+                return null;
+            
+            await SendSlackNotificationAsync(checkResult.Description);
+            return checkResult.Description;
+        }
+
+        private static Task SendSlackNotificationAsync(string message)
+        {
+            try
+            {
+                if (_queue == null)
+                    return Task.CompletedTask;
+
+                return _queue.AddMessageAsync(new CloudQueueMessage(new
+                {
+                    Type = "Monitor",
+                    Sender = _sender,
+                    Message = message
+                }.ToJson()));
+            }
+            catch
+            {
+                return Task.CompletedTask;
+            }
         }
 
         private static object[] GetValuesToCheck<T>(PropertyInfo property, T model)
