@@ -92,7 +92,7 @@ namespace Lykke.SettingsReader
             try
             {
                 Console.WriteLine("Start checking services...");
-                errorMessages = await ProcessChecks(model);
+                errorMessages = await ProcessChecksAsync(model);
                 Console.WriteLine(string.IsNullOrEmpty(errorMessages)
                     ? "Services checked. OK"
                     : $"Services checked:{Environment.NewLine}{errorMessages} ");
@@ -183,7 +183,7 @@ namespace Lykke.SettingsReader
             return $"{path}.{propertyName}".Trim('.');
         }
 
-        private static async Task<string> ProcessChecks<T>(T model)
+        private static async Task<string> ProcessChecksAsync<T>(T model)
         {
             if (model == null)
                 return null;
@@ -194,7 +194,7 @@ namespace Lykke.SettingsReader
                 .Where(p => !p.GetIndexParameters().Any())
                 .ToArray();
 
-            var tasks = properties.Select(p => CheckProperty(p, model)).ToList();
+            var tasks = properties.Select(p => CheckPropertyAsync(p, model)).ToList();
 
             var errorMessages = (await Task.WhenAll(tasks))
                 .Where(item => !string.IsNullOrEmpty(item))
@@ -203,7 +203,7 @@ namespace Lykke.SettingsReader
             return errorMessages.Count == 0 ? null : string.Join(Environment.NewLine, errorMessages);
         }
 
-        private static async Task<string> CheckProperty<T>(PropertyInfo property, T model)
+        private static async Task<string> CheckPropertyAsync<T>(PropertyInfo property, T model)
         {
             if (!property.CanRead)
             {
@@ -231,7 +231,7 @@ namespace Lykke.SettingsReader
                         break;
                 }
 
-                tasks = valuesToCheck.Select(val => DoCheck(model, property, checker, val)).ToList();
+                tasks = valuesToCheck.Select(val => DoCheckAsync(model, property, checker, val)).ToList();
 
                 errorMessages = (await Task.WhenAll(tasks))
                     .Where(item => !string.IsNullOrEmpty(item))
@@ -245,7 +245,7 @@ namespace Lykke.SettingsReader
             
             object[] values = GetValuesToCheck(property, model);
 
-            tasks = values.Select(ProcessChecks).ToList();
+            tasks = values.Select(ProcessChecksAsync).ToList();
 
             errorMessages = (await Task.WhenAll(tasks))
                 .Where(item => !string.IsNullOrEmpty(item))
@@ -254,7 +254,7 @@ namespace Lykke.SettingsReader
             return errorMessages.Count == 0 ? null : string.Join(Environment.NewLine, errorMessages);
         }
 
-        private static async Task<string> DoCheck<T>(T model, PropertyInfo property, ISettingsFieldChecker checker, string val)
+        private static async Task<string> DoCheckAsync<T>(T model, PropertyInfo property, ISettingsFieldChecker checker, string val)
         {
             if (string.IsNullOrWhiteSpace(val))
             {
@@ -271,11 +271,11 @@ namespace Lykke.SettingsReader
             if (checkResult.Result) 
                 return null;
             
-            await SendSlackNotification(checkResult.Description);
+            await SendSlackNotificationAsync(checkResult.Description);
             return checkResult.Description;
         }
 
-        private static Task SendSlackNotification(string message)
+        private static Task SendSlackNotificationAsync(string message)
         {
             try
             {
