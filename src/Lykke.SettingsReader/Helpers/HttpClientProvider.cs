@@ -2,11 +2,11 @@
 
 namespace Lykke.SettingsReader.Helpers
 {
-    internal static class HttpClientHelper
+    internal static class HttpClientProvider
     {
         private static readonly HttpClient Instance = new HttpClient();
         
-        static HttpClientHelper()
+        static HttpClientProvider()
         {
         }
 

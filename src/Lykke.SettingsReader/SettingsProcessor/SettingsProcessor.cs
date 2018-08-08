@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
@@ -11,9 +10,10 @@ using Lykke.SettingsReader.Exceptions;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using MongoDB.Bson;
-using MongoDB.Driver;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Polly;
+using Polly.Retry;
 
 namespace Lykke.SettingsReader
 {
@@ -23,8 +23,12 @@ namespace Lykke.SettingsReader
     [PublicAPI]
     public static partial class SettingsProcessor
     {
-        private static CloudQueue _queue = null;
+        private static CloudQueue _queue;
         private static string _sender;
+        private static RetryPolicy<CheckFieldResult> _retry = Policy
+            .Handle<Exception>()
+            .OrResult<CheckFieldResult>(r => !r.Result)
+            .WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(100));
 
         /// <summary>
         /// Parses and validates settings json.
@@ -92,6 +96,10 @@ namespace Lykke.SettingsReader
                 Console.WriteLine(string.IsNullOrEmpty(errorMessages)
                     ? "Services checked. OK"
                     : $"Services checked:{Environment.NewLine}{errorMessages} ");
+            }
+            catch (CheckFieldException)
+            {
+                throw;
             }
             catch(Exception ex)
             {
@@ -258,39 +266,33 @@ namespace Lykke.SettingsReader
                 return null;
             }
 
-            int retryCount = 0;
-            CheckFieldResult checkResult;
+            CheckFieldResult checkResult = await _retry.ExecuteAsync(() => Task.FromResult(checker.CheckField(model, property.Name, val)));
 
-            do
-            {
-                if (retryCount > 0)
-                    Thread.Sleep(100);
-
-                checkResult = checker.CheckField(model, property.Name, val);
-                retryCount++;
-
-            } while (!checkResult.Result && retryCount < 3);
+            if (checkResult.Result) 
+                return null;
             
-            if (!checkResult.Result)
-            {
-                await SendSlackNotification(checkResult.Description);
-                return checkResult.Description;
-            }
-
-            return null;
+            await SendSlackNotification(checkResult.Description);
+            return checkResult.Description;
         }
 
         private static Task SendSlackNotification(string message)
         {
-            if (_queue == null)
-                return Task.CompletedTask;
-            
-            return _queue.AddMessageAsync(new CloudQueueMessage(new
+            try
             {
-                Type = "Monitor",
-                Sender = _sender,
-                Message = message
-            }.ToJson()));
+                if (_queue == null)
+                    return Task.CompletedTask;
+
+                return _queue.AddMessageAsync(new CloudQueueMessage(new
+                {
+                    Type = "Monitor",
+                    Sender = _sender,
+                    Message = message
+                }.ToJson()));
+            }
+            catch
+            {
+                return Task.CompletedTask;
+            }
         }
 
         private static object[] GetValuesToCheck<T>(PropertyInfo property, T model)

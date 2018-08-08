@@ -213,6 +213,22 @@ namespace Lykke.SettingsReader.Test
             string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             Assert.Contains("Failed", message);
         }
+        
+        [Fact]
+        public async Task HttpCheckAttribute_IsEmptyFieldl()
+        {
+            var settings = SettingsProcessor.Process<TestHttpCheckModel>(
+                    $"{{'Service': {{'ServiceUrl': '{_serviceUrl}'}}, 'Url': '', 'Port':5672, 'Num': 1234}}");
+            
+            var exception = await Record.ExceptionAsync(async () =>
+            {
+                await SettingsProcessor.CheckDependenciesAsync(settings);
+            });
+
+            Assert.NotNull(exception);
+            Assert.IsType<CheckFieldException>(exception);
+            Assert.Contains("Empty setting value", exception.Message);
+        }
 
         [Fact]
         public async Task TcpCheckAttribute_IsArrayOk()
@@ -276,8 +292,14 @@ namespace Lykke.SettingsReader.Test
             var settings = SettingsProcessor.Process<TestTcpCheckModel>(
                 "{'HostInfo': {'HostPort': '127.0.0.1:zzz'}, 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
-            Assert.Contains("Invalid port", message);
+            var exception = await Record.ExceptionAsync(async () =>
+            {
+                await SettingsProcessor.CheckDependenciesAsync(settings);
+            });
+
+            Assert.NotNull(exception);
+            Assert.IsType<CheckFieldException>(exception);
+            Assert.Contains("Invalid port", exception.Message);
         }
 
         [Fact]
@@ -291,11 +313,17 @@ namespace Lykke.SettingsReader.Test
 
             string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             Assert.Contains("Failed", message);
-
+            
             settings = SettingsProcessor.Process<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': 'not a port'}}");
+            
+            var exception = await Record.ExceptionAsync(async () =>
+            {
+                await SettingsProcessor.CheckDependenciesAsync(settings);
+            });
 
-            message = await SettingsProcessor.CheckDependenciesAsync(settings);
-            Assert.Equal($"Check of the 'Host' field value [{host}] is failed: Invalid port value in property 'Port'", message);
+            Assert.NotNull(exception);
+            Assert.IsType<CheckFieldException>(exception);
+            Assert.Equal($"Check of the 'Host' field value [{host}] is failed: Invalid port value in property 'Port'", exception.Message);
 
             settings = SettingsProcessor.Process<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': '{port}'}}");
 
@@ -312,8 +340,15 @@ namespace Lykke.SettingsReader.Test
         public async Task TcpCheckAttribute_WrongPortProperty()
         {
             var settings = SettingsProcessor.Process<WrongTestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}");
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
-            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", message);
+            
+            var exception = await Record.ExceptionAsync(async () =>
+            {
+                await SettingsProcessor.CheckDependenciesAsync(settings);
+            });
+
+            Assert.NotNull(exception);
+            Assert.IsType<CheckFieldException>(exception);
+            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", exception.Message);
         }
 
         /*

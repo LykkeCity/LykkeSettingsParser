@@ -27,7 +27,7 @@ namespace Lykke.SettingsReader
         {
             Console.WriteLine($"{DateTime.UtcNow} Reading settings");
 
-            var content = await HttpClientHelper.Client.GetStringAsync(_settingsUrl);
+            var content = await HttpClientProvider.Client.GetStringAsync(_settingsUrl);
             var processingResult = SettingsProcessor.ProcessForConfiguration<TSettings>(content);
             var settings = processingResult.Item1;
             SetSettingsConfigurationRoot(processingResult.Item2);

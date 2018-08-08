@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Http;
-using System.Threading;
 using Lykke.SettingsReader.Helpers;
 
 namespace Lykke.SettingsReader.Checkers
@@ -27,7 +26,7 @@ namespace Lykke.SettingsReader.Checkers
             {
                 bool checkResult;
                 
-                using (var response = HttpClientHelper.Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult())
+                using (var response = HttpClientProvider.Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult())
                 {
                     checkResult = response.IsSuccessStatusCode;
                 }
