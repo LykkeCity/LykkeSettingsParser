@@ -8,7 +8,7 @@ namespace Lykke.SettingsReader.Test.Models
         public static TestSettings<TValue> FormatJsonString(string value)
         {
             if (null == value)
-                return SettingsProcessor.Process<TestSettings<TValue>>("{ 'value': null }");
+                return SettingsProcessor.ProcessAsync<TestSettings<TValue>>("{ 'value': null }").GetAwaiter().GetResult();
 
             value = value
                 .Replace(@"\", @"\\")
@@ -21,8 +21,8 @@ namespace Lykke.SettingsReader.Test.Models
         public static TestSettings<TValue> FormatJson(string value)
         {
             return null == value
-                ? SettingsProcessor.Process<TestSettings<TValue>>("{ 'value': null }")
-                : SettingsProcessor.Process<TestSettings<TValue>>("{ 'value': " + value + " }");
+                ? SettingsProcessor.ProcessAsync<TestSettings<TValue>>("{ 'value': null }").GetAwaiter().GetResult()
+                : SettingsProcessor.ProcessAsync<TestSettings<TValue>>("{ 'value': " + value + " }").GetAwaiter().GetResult();
         }
     }
 

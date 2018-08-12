@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 namespace Lykke.SettingsReader
@@ -20,6 +19,7 @@ namespace Lykke.SettingsReader
         /// <typeparam name="TSettings">model for settings</typeparam>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
+        [Obsolete("Use LoadSettings method with Func")]
         public static IReloadingManagerWithConfiguration<TSettings> LoadSettings<TSettings>(
             this IConfiguration configuration,
             string key = null,
@@ -37,36 +37,45 @@ namespace Lykke.SettingsReader
 
             if (settingsUrl.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
             {
-                return new SettingsServiceReloadingManager<TSettings>(settingsUrl, configure);
+                return new SettingsServiceReloadingManager<TSettings>(settingsUrl, null, configure);
             }
 
-            return new LocalSettingsReloadingManager<TSettings>(settingsUrl);
+            return new LocalSettingsReloadingManager<TSettings>(settingsUrl, null);
         }
 
         /// <summary>
-        /// Checks dependencies
+        /// Loads settings
         /// </summary>
         /// <param name="configuration"></param>
-        /// <param name="settings">settings model to check dependencies</param>
-        /// <param name="slackConnString">slack connection string to send message about failed dependencies</param>
-        /// <param name="queueName">queue name for slack notifications</param>
-        /// <param name="sender">name of the sender in slack message</param>
-        /// <typeparam name="TSettings"></typeparam>
+        /// <param name="slackCheckerSettings"></param>
+        /// <param name="key">key name in the configuration</param>
+        /// <param name="configure">action to configure settings</param>
+        /// <typeparam name="TSettings">model for settings</typeparam>
         /// <returns></returns>
-        public static Task CheckDependenciesAsync<TSettings>(
-            this IConfiguration configuration, TSettings settings, string slackConnString, string queueName, string sender)
+        /// <exception cref="InvalidOperationException"></exception>
+        [Obsolete("Use LoadSettings method with Func")]
+        public static IReloadingManagerWithConfiguration<TSettings> LoadSettings<TSettings>(
+            this IConfiguration configuration,
+            Func<TSettings, (string slackConnString, string queueName, string senderName)> slackCheckerSettings,
+            string key = null,
+            Action<TSettings> configure = null
+        )
             where TSettings : class
         {
-            if (string.IsNullOrEmpty(slackConnString))
-                throw new ArgumentNullException(nameof(slackConnString));
-            
-            if (string.IsNullOrEmpty(queueName))
-                throw new ArgumentNullException(nameof(queueName));
-            
-            if (string.IsNullOrEmpty(sender))
-                throw new ArgumentNullException(nameof(sender));
-            
-            return SettingsProcessor.CheckDependenciesAsync(settings, slackConnString, queueName, sender);
+            key = key ?? DefaultConfigurationKey;
+            var settingsUrl = configuration[key];
+
+            if (string.IsNullOrEmpty(settingsUrl))
+            {
+                throw new InvalidOperationException($"The connection string to the settings was not found by configuration key '{key}'");
+            }
+
+            if (settingsUrl.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return new SettingsServiceReloadingManager<TSettings>(settingsUrl, slackCheckerSettings, configure);
+            }
+
+            return new LocalSettingsReloadingManager<TSettings>(settingsUrl, slackCheckerSettings);
         }
     }
 }

@@ -7,25 +7,9 @@ namespace Lykke.SettingsReader.Attributes
     /// </summary>
     public class AzureTableCheckAttribute : BaseCheckAttribute
     {
-        /// <summary>
-        /// Parameterless c-tor
-        /// </summary>
-        public AzureTableCheckAttribute()
-            : base(true)
-        {
-        }
-
-        /// <summary>
-        /// Parameterless c-tor
-        /// </summary>
-        public AzureTableCheckAttribute(bool throwExceptionOnFail)
-            : base(throwExceptionOnFail)
-        {
-        }
-
         internal override ISettingsFieldChecker GetChecker()
         {
-            return new AzureTableChecker(_throwExceptionOnFail);
+            return new AzureTableChecker();
         }
     }
 }

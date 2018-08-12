@@ -11,8 +11,9 @@ namespace Lykke.SettingsReader
     {
         private readonly string _settingsUrl;
         private readonly Action<TSettings> _configure;
+        private readonly Func<TSettings, (string, string, string)> _slackInfo;
 
-        public SettingsServiceReloadingManager(string settingsUrl, Action<TSettings> configure = null)
+        public SettingsServiceReloadingManager(string settingsUrl, Func<TSettings, (string, string, string)> slackInfo, Action<TSettings> configure = null)
         {
             if (string.IsNullOrEmpty(settingsUrl))
             {
@@ -21,6 +22,7 @@ namespace Lykke.SettingsReader
 
             _settingsUrl = settingsUrl;
             _configure = configure;
+            _slackInfo = slackInfo;
         }
 
         protected override async Task<TSettings> Load()
@@ -28,9 +30,12 @@ namespace Lykke.SettingsReader
             Console.WriteLine($"{DateTime.UtcNow} Reading settings");
 
             var content = await HttpClientProvider.Client.GetStringAsync(_settingsUrl);
-            var processingResult = SettingsProcessor.ProcessForConfiguration<TSettings>(content);
+            var processingResult = await SettingsProcessor.ProcessForConfigurationAsync<TSettings>(content);
             var settings = processingResult.Item1;
             SetSettingsConfigurationRoot(processingResult.Item2);
+
+            Task.Run(() => SettingsProcessor.CheckDependenciesAsync(settings, _slackInfo));
+            
             _configure?.Invoke(settings);
             return settings;
         }

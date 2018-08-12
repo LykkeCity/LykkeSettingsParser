@@ -23,53 +23,53 @@ namespace Lykke.SettingsReader.Test
 ""TestDouble"" : 0.2, ""SetOnlyProperty"" : 0.3
     }";
 
-        private const string _serviceUrl = "https://api-dev.lykkex.net";
+        private const string ServiceUrl = "https://api-dev.lykkex.net";
 
 
         [Fact]
-        public void EmptyJson()
+        public async Task EmptyJson()
         {
-            Assert.Throws<JsonStringEmptyException>(() => SettingsProcessor.Process<TestModel>(string.Empty));
+            await Assert.ThrowsAsync<JsonStringEmptyException>(async () => await SettingsProcessor.ProcessAsync<TestModel>(string.Empty));
         }
 
         [Fact]
-        public void IncorrectJson()
+        public async Task IncorrectJson()
         {
-            Assert.Throws<IncorrectJsonFormatException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Substring(10)));
+            await Assert.ThrowsAsync<IncorrectJsonFormatException>(async () => await SettingsProcessor.ProcessAsync<TestModel>(_jsonTest.Substring(10)));
         }
 
         [Fact]
-        public void FieldMissJson()
+        public async Task FieldMissJson()
         {
-            var ex = Assert.Throws<RequiredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":2,", String.Empty)));
+            var ex = await Assert.ThrowsAsync<RequiredFieldEmptyException>(async () => await  SettingsProcessor.ProcessAsync<TestModel>(_jsonTest.Replace(@"""test2"":2,", String.Empty)));
             Assert.Equal("Test2", ex.FieldName);
         }
 
         [Fact]
-        public void SubFieldMissJson()
+        public async Task SubFieldMissJson()
         {
-            var ex = Assert.Throws<RequiredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":21,", String.Empty)));
+            var ex = await Assert.ThrowsAsync<RequiredFieldEmptyException>(async () => await  SettingsProcessor.ProcessAsync<TestModel>(_jsonTest.Replace(@"""test2"":21,", String.Empty)));
             Assert.Equal("SubObject.Test2", ex.FieldName);
         }
 
         [Fact]
-        public void SubFieldArrayMissJson()
+        public async Task SubFieldArrayMissJson()
         {
-            var ex = Assert.Throws<RequiredFieldEmptyException>(() => SettingsProcessor.Process<TestModel>(_jsonTest.Replace(@"""test2"":24,", String.Empty)));
+            var ex = await Assert.ThrowsAsync<RequiredFieldEmptyException>(async () => await  SettingsProcessor.ProcessAsync<TestModel>(_jsonTest.Replace(@"""test2"":24,", String.Empty)));
             Assert.Equal("SubArray.2.Test2", ex.FieldName);
         }
 
         [Fact]
-        public void OkJson()
+        public async Task OkJson()
         {
-            var model = SettingsProcessor.Process<TestModel>(_jsonTest);
+            var model = await SettingsProcessor.ProcessAsync<TestModel>(_jsonTest);
             CheckModel(model);
         }
 
         [Fact]
-        public void OkWithOptionalJson()
+        public async Task OkWithOptionalJson()
         {
-            var model = SettingsProcessor.Process<TestOptionAttrModel>(_jsonTest);
+            var model = await SettingsProcessor.ProcessAsync<TestOptionAttrModel>(_jsonTest);
             CheckModel(model);
             Assert.Null(model.Test4);
             Assert.Null(model.SubObjectOptional);
@@ -122,14 +122,14 @@ namespace Lykke.SettingsReader.Test
         }
 
         [Fact]
-        public void Test_NegativeNumbersAsStrings_IsOk()
+        public async Task Test_NegativeNumbersAsStrings_IsOk()
         {
             string json = "{'Int': '-1234', " +
                           "'Double': '-10.4', " +
                           "'Float': '-10.4', " +
                           "'Decimal': '-10.2'}";
 
-            var model = SettingsProcessor.Process<TestConvert>(json);
+            var model = await SettingsProcessor.ProcessAsync<TestConvert>(json);
             Assert.Equal(-1234, model.Int);
             Assert.Equal(-10.4, Math.Round(model.Double, 2));
             Assert.Equal(-10.4, Math.Round(model.Float, 2));
@@ -137,14 +137,14 @@ namespace Lykke.SettingsReader.Test
         }
 
         [Fact]
-        public void Test_NegativeNumbers_IsOk()
+        public async Task Test_NegativeNumbers_IsOk()
         {
             string json = "{'Int': -1234, " +
                           "'Double': -10.4, " +
                           "'Float': -10.4, " +
                           "'Decimal': -10.2}";
 
-            var model = SettingsProcessor.Process<TestConvert>(json);
+            var model = await SettingsProcessor.ProcessAsync<TestConvert>(json);
             Assert.Equal(-1234, model.Int);
             Assert.Equal(-10.4, Math.Round(model.Double, 2));
             Assert.Equal(-10.4, Math.Round(model.Float, 2));
@@ -152,82 +152,74 @@ namespace Lykke.SettingsReader.Test
         }
 
         [Fact]
-        public void HttpCheckAttribute_IsOk()
+        public async Task HttpCheckAttribute_IsOk()
         {
-            var exception = Record.Exception(() =>
-            {
-                SettingsProcessor.Process<TestHttpCheckModel>(
-                    $"{{'Service': {{'ServiceUrl': '{_serviceUrl}'}}, 'Url': '{_serviceUrl}', 'Port':5672, 'Num': 1234}}");
-            });
+            var settings = await SettingsProcessor.ProcessAsync<TestHttpCheckModel>(
+                    $"{{'Service': {{'ServiceUrl': '{ServiceUrl}'}}, 'Url': '{ServiceUrl}', 'Port':5672, 'Num': 1234}}");
 
-            Assert.Null(exception);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
+            Assert.Null(message);
         }
 
         [Fact]
-        public void HttpCheckAttribute_IsArrayOk()
+        public async Task HttpCheckAttribute_IsArrayOk()
         {
-            var exception = Record.Exception(() =>
-            {
-                SettingsProcessor.Process<TestHttpCheckArrayModel>(
-                    $"{{'Services': [{{'ServiceUrl': '{_serviceUrl}'}}], 'List': [{{'ServiceUrl': '{_serviceUrl}'}}], " +
-                    $"'IList': [{{'ServiceUrl': '{_serviceUrl}'}}], 'RoList': [{{'ServiceUrl': '{_serviceUrl}'}}], " +
-                    $"'RoCollection': [{{'ServiceUrl': '{_serviceUrl}'}}], 'Enumerable': [{{'ServiceUrl': '{_serviceUrl}'}}]}}");
-            });
+            var settings = await SettingsProcessor.ProcessAsync<TestHttpCheckArrayModel>(
+                    $"{{'Services': [{{'ServiceUrl': '{ServiceUrl}'}}], 'List': [{{'ServiceUrl': '{ServiceUrl}'}}], " +
+                    $"'IList': [{{'ServiceUrl': '{ServiceUrl}'}}], 'RoList': [{{'ServiceUrl': '{ServiceUrl}'}}], " +
+                    $"'RoCollection': [{{'ServiceUrl': '{ServiceUrl}'}}], 'Enumerable': [{{'ServiceUrl': '{ServiceUrl}'}}]}}");
 
-            Assert.Null(exception);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
+            Assert.Null(message);
         }
 
         [Fact]
-        public void HttpCheckAttribute_IsListOk()
+        public async Task HttpCheckAttribute_IsListOk()
         {
-            var exception = Record.Exception(() =>
-            {
-                SettingsProcessor.Process<TestHttpCheckListModel>(
-                    $"{{'Services': ['{_serviceUrl}'],'List': ['{_serviceUrl}'],'IList': ['{_serviceUrl}']," +
-                    $"'RoList': ['{_serviceUrl}'],'RoCollection': ['{_serviceUrl}'],'Enumerable': ['{_serviceUrl}']}}");
-            });
+            var settings = await SettingsProcessor.ProcessAsync<TestHttpCheckListModel>(
+                    $"{{'Services': ['{ServiceUrl}'],'List': ['{ServiceUrl}'],'IList': ['{ServiceUrl}']," +
+                    $"'RoList': ['{ServiceUrl}'],'RoCollection': ['{ServiceUrl}'],'Enumerable': ['{ServiceUrl}']}}");
 
-            Assert.Null(exception);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
+            Assert.Null(message);
         }
 
         [Fact]
-        public void HttpCheckAttribute_IsDictionaryOk()
+        public async Task HttpCheckAttribute_IsDictionaryOk()
         {
-            var exception = Record.Exception(() =>
-            {
-                SettingsProcessor.Process<TestHttpCheckDictioinaryModel>(
-                    $"{{'Services': {{'first': {{'ServiceUrl': '{_serviceUrl}'}} }}," +
-                    $"'IDict': {{'first': {{'ServiceUrl': '{_serviceUrl}'}} }}," +
-                    $"'RoDict': {{'first': {{'ServiceUrl': '{_serviceUrl}'}} }} }}");
-            });
-
-            Assert.Null(exception);
+            var settings = await SettingsProcessor.ProcessAsync<TestHttpCheckDictioinaryModel>(
+                    $"{{'Services': {{'first': {{'ServiceUrl': '{ServiceUrl}'}} }}," +
+                    $"'IDict': {{'first': {{'ServiceUrl': '{ServiceUrl}'}} }}," +
+                    $"'RoDict': {{'first': {{'ServiceUrl': '{ServiceUrl}'}} }} }}");
+            
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
+            Assert.Null(message);
         }
 
         [Fact]
         public async Task HttpCheckAttribute_IsInvalidUrl()
         {
-            var settings = SettingsProcessor.Process<TestHttpCheckModel>(
-                    $"{{'Service': {{'ServiceUrl': 'not_url_at_all'}}, 'Url': '{_serviceUrl}/', 'Port':5672, 'Num': 1234}}");
+            var settings = await SettingsProcessor.ProcessAsync<TestHttpCheckModel>(
+                    $"{{'Service': {{'ServiceUrl': 'not_url_at_all'}}, 'Url': '{ServiceUrl}/', 'Port':5672, 'Num': 1234}}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
             Assert.Contains("Failed", message);
         }
         
         [Fact]
-        public async Task HttpCheckAttribute_IsEmptyFieldl()
+        public async Task HttpCheckAttribute_IsEmptyField()
         {
-            var settings = SettingsProcessor.Process<TestHttpCheckModel>(
-                    $"{{'Service': {{'ServiceUrl': '{_serviceUrl}'}}, 'Url': '', 'Port':5672, 'Num': 1234}}");
-            
-            var exception = await Record.ExceptionAsync(async () =>
-            {
-                await SettingsProcessor.CheckDependenciesAsync(settings);
-            });
+            var settings = await SettingsProcessor.ProcessAsync<TestHttpCheckModel>(
+                $"{{'Service': {{'ServiceUrl': '{ServiceUrl}'}}, 'Url': '', 'Port':5672, 'Num': 1234}}");
 
-            Assert.NotNull(exception);
-            Assert.IsType<CheckFieldException>(exception);
-            Assert.Contains("Empty setting value", exception.Message);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
+            Assert.Contains("Empty setting value", message);
         }
 
         [Fact]
@@ -245,9 +237,10 @@ namespace Lykke.SettingsReader.Test
             
             foreach (var pair in checkList)
             {
-                var settings = SettingsProcessor.Process<TestTcpCheckArrayModel>($"{{'{pair.Item1}': [{{'HostPort': '{pair.Item2}'}}] }}");
+                var settings = await SettingsProcessor.ProcessAsync<TestTcpCheckArrayModel>($"{{'{pair.Item1}': [{{'HostPort': '{pair.Item2}'}}] }}");
                 
-                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+                
                 Assert.Contains("Failed", message);
             }
         }
@@ -266,40 +259,37 @@ namespace Lykke.SettingsReader.Test
             };
             foreach (var pair in checkList)
             {
-                var settings = SettingsProcessor.Process<TestTcpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
+                var settings = await SettingsProcessor.ProcessAsync<TestTcpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
                 
-                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+                
                 Assert.Contains("Failed", message);
             }
         }
 
         [Fact]
-        public void TcpCheckAttribute_IsDictionaryOk()
+        public async Task TcpCheckAttribute_IsDictionaryOk()
         {
-            var exception = Record.Exception(() =>
-            {
-                SettingsProcessor.Process<TestTcpCheckDictionaryModel>("{'Endpoints': {'first': {'HostPort': '127.0.0.1:5672'}}," +
+            var settings = await SettingsProcessor.ProcessAsync<TestTcpCheckDictionaryModel>("{'Endpoints': {'first': {'HostPort': '127.0.0.1:5672'}}," +
                                                                        "'IDict': {'first': {'HostPort': '127.0.0.1:5672'}}," +
+                                                                                             
                                                                        "'RoDict': {'first': {'HostPort': '127.0.0.1:5672'}}}");
-            });
-
-            Assert.Null(exception);
+            
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
+            Assert.Null(message);
         }
 
         [Fact]
         public async Task TcpCheckAttribute_IsInvalidPort()
         {
-            var settings = SettingsProcessor.Process<TestTcpCheckModel>(
+            var settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>(
                 "{'HostInfo': {'HostPort': '127.0.0.1:zzz'}, 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}");
 
-            var exception = await Record.ExceptionAsync(async () =>
-            {
-                await SettingsProcessor.CheckDependenciesAsync(settings);
-            });
-
-            Assert.NotNull(exception);
-            Assert.IsType<CheckFieldException>(exception);
-            Assert.Contains("Invalid port", exception.Message);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
+            Assert.NotNull(message);
+            Assert.Contains("Invalid port", message);
         }
 
         [Fact]
@@ -308,47 +298,41 @@ namespace Lykke.SettingsReader.Test
             const string host = "127.0.0.1";
             const int port = 5672;
 
-            var settings =
-                SettingsProcessor.Process<TestTcpCheckModel>($"{{'HostInfo': {{'HostPort': '{host}:{port}'}} }}");
+            var settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>($"{{'HostInfo': {{'HostPort': '{host}:{port}'}} }}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
             Assert.Contains("Failed", message);
             
-            settings = SettingsProcessor.Process<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': 'not a port'}}");
+            settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': 'not a port'}}");
             
-            var exception = await Record.ExceptionAsync(async () =>
-            {
-                await SettingsProcessor.CheckDependenciesAsync(settings);
-            });
+            message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
 
-            Assert.NotNull(exception);
-            Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal($"Check of the 'Host' field value [{host}] is failed: Invalid port value in property 'Port'", exception.Message);
+            Assert.NotNull(message);
+            Assert.Equal($"Check of the 'Host' field value [{host}] is failed: Invalid port value in property 'Port'", message);
 
-            settings = SettingsProcessor.Process<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': '{port}'}}");
+            settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': '{port}'}}");
 
-            message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
             Assert.Contains("Failed", message);
 
-            settings = SettingsProcessor.Process<TestTcpCheckModel>($"{{'Server': '{host}'}}");
+            settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>($"{{'Server': '{host}'}}");
 
-            message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
             Assert.Contains("Failed", message);
         }
 
         [Fact]
         public async Task TcpCheckAttribute_WrongPortProperty()
         {
-            var settings = SettingsProcessor.Process<WrongTestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}");
+            var settings = await SettingsProcessor.ProcessAsync<WrongTestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}");
             
-            var exception = await Record.ExceptionAsync(async () =>
-            {
-                await SettingsProcessor.CheckDependenciesAsync(settings);
-            });
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
 
-            Assert.NotNull(exception);
-            Assert.IsType<CheckFieldException>(exception);
-            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", exception.Message);
+            Assert.NotNull(message);
+            Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", message);
         }
 
         /*
@@ -359,7 +343,7 @@ namespace Lykke.SettingsReader.Test
             string json = "{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:5672'}}";
             var exception = Record.Exception(() =>
             {
-                SettingsProcessor.Process<TestAmqpCheckModel>(json);
+                SettingsProcessor.ProcessAsync<TestAmqpCheckModel>(json);
             });
 
             Assert.Null(exception);
@@ -381,8 +365,8 @@ namespace Lykke.SettingsReader.Test
             
             foreach (var pair in checkList)
             {
-                var settings = SettingsProcessor.Process<TestAmqpCheckArrayModel>($"{{'{pair.Item1}': [{{'ConnString': '{pair.Item2}'}}] }}");
-                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+                var settings = await SettingsProcessor.ProcessAsync<TestAmqpCheckArrayModel>($"{{'{pair.Item1}': [{{'ConnString': '{pair.Item2}'}}] }}");
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
                 Assert.Contains("Failed", message);
             }
         }
@@ -401,51 +385,45 @@ namespace Lykke.SettingsReader.Test
             };
             foreach (var pair in checkList)
             {
-                var settings = SettingsProcessor.Process<TestAmqpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
-                
-                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+                var settings = await SettingsProcessor.ProcessAsync<TestAmqpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
                 Assert.Contains("Failed", message);
             }
         }
 
         [Fact]
-        public void AmqpCheckAttribute_IsDictionaryOk()
+        public async Task AmqpCheckAttribute_IsDictionaryOk()
         {
-            var exception = Record.Exception(() =>
-            {
-                SettingsProcessor.Process<TestAmqpCheckDictionaryModel>("{'Rabbits': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}," +
+            var settings = await SettingsProcessor.ProcessAsync<TestAmqpCheckDictionaryModel>("{'Rabbits': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}," +
                                                                         "'IDict': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}," +
-                                                                        "'RoDict': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}}");
-            });
-
-            Assert.Null(exception);
+            
+                                                                                              "'RoDict': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}}");
+            
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
+            Assert.Null(message);
         }
 
         [Fact]
         public async Task AmqpCheckAttribute_IsInvalidPort()
         {
-            var settings = SettingsProcessor.Process<TestAmqpCheckModel>(
+            var settings = await SettingsProcessor.ProcessAsync<TestAmqpCheckModel>(
                 "{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz'}}");
             
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
             Assert.Contains("Failed", message);
         }
 
         [Fact]
         public async Task AmqpCheckAttribute_IsInvalidConnectionString()
         {
-            var settings = SettingsProcessor.Process<TestAmqpCheckModel>(
+            var settings = await SettingsProcessor.ProcessAsync<TestAmqpCheckModel>(
                 "{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'rabbit-registration.lykke-service.svc.cluster.local:5672'}}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            
             Assert.Contains("Failed", message);
-        }
-
-        private static Exception GetBaseException(Exception ex)
-        {
-            while (ex.InnerException != null)
-                ex = ex.InnerException;
-            return ex;
         }
     }
 }

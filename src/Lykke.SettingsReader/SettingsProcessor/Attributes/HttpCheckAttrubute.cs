@@ -17,25 +17,13 @@ namespace Lykke.SettingsReader.Attributes
         /// </summary>
         /// <param name="path">Relative uri</param>
         public HttpCheckAttribute(string path)
-            : base(true)
-        {
-            Path = path;
-        }
-
-        /// <summary>
-        /// C-tor with both relative uri and throwExceptionOnFail parameters
-        /// </summary>
-        /// <param name="path">Relative uri</param>
-        /// <param name="throwExceptionOnFail">Throw exception on fail flag</param>
-        public HttpCheckAttribute(string path, bool throwExceptionOnFail)
-            : base(throwExceptionOnFail)
         {
             Path = path;
         }
 
         internal override ISettingsFieldChecker GetChecker()
         {
-            return new HttpChecker(Path, _throwExceptionOnFail);
+            return new HttpChecker(Path);
         }
     }
 }

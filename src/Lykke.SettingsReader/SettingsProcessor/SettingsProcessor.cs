@@ -36,9 +36,9 @@ namespace Lykke.SettingsReader
         /// <typeparam name="T">Type for parsing</typeparam>
         /// <param name="json">Input json</param>
         /// <returns>Parsed object of generic type T</returns>
-        public static T Process<T>(string json)
+        public static async Task<T> ProcessAsync<T>(string json)
         {
-            return ProcessForConfiguration<T>(json).Item1;
+            return (await ProcessForConfigurationAsync<T>(json)).Item1;
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Lykke.SettingsReader
         /// <typeparam name="T">Type for parsing</typeparam>
         /// <param name="json">Input json</param>
         /// <returns>Parsed object of generic type T and parsed JToken object for settings json</returns>
-        public static (T, JToken) ProcessForConfiguration<T>(string json)
+        public static Task<(T, JToken)> ProcessForConfigurationAsync<T>(string json)
         {
             if (string.IsNullOrEmpty(json))
                 throw new JsonStringEmptyException();
@@ -64,47 +64,41 @@ namespace Lykke.SettingsReader
 
             var result = FillChildrenFields<T>(jsonObj);
 
-            return (result, jsonObj);
+            return Task.FromResult((result, jsonObj));
         }
 
         /// <summary>
         /// Checks dependencies
         /// </summary>
         /// <param name="model">model to check dependenices for</param>
-        /// <param name="slackConnString">connection string for slack to send failed dependecy message</param>
-        /// <param name="queueName">queue name to send failed message</param>
-        /// <param name="sender">name of the sender</param>
+        /// <param name="slackInfo">function to get slack notification parameters</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static async Task<string> CheckDependenciesAsync<T>(T model, string slackConnString = null, string queueName = null, string sender = null)
+        public static async Task<string> CheckDependenciesAsync<T>(T model, Func<T, (string, string, string)> slackInfo)
         {
-            if (!string.IsNullOrEmpty(slackConnString) && !string.IsNullOrEmpty(queueName))
+            string connString = null;
+            string queueName = null;
+            string sender = null;
+            
+            if (slackInfo != null)
             {
-                var account = CloudStorageAccount.Parse(slackConnString);
+                (connString, queueName, sender) = slackInfo(model);
+            }
+
+            if (!string.IsNullOrEmpty(connString) && !string.IsNullOrEmpty(queueName))
+            {
+                var account = CloudStorageAccount.Parse(connString);
                 var client = account.CreateCloudQueueClient();
                 _queue = client.GetQueueReference(queueName);
                 _sender = sender;
                 await _queue.CreateIfNotExistsAsync();
             }
 
-            string errorMessages;
-
-            try
-            {
-                Console.WriteLine("Start checking services...");
-                errorMessages = await ProcessChecksAsync(model);
-                Console.WriteLine(string.IsNullOrEmpty(errorMessages)
-                    ? "Services checked. OK"
-                    : $"Services checked:{Environment.NewLine}{errorMessages} ");
-            }
-            catch (CheckFieldException)
-            {
-                throw;
-            }
-            catch(Exception ex)
-            {
-                errorMessages = ex.Message;
-            }
+            Console.WriteLine("Start checking services...");
+            var errorMessages = await ProcessChecksAsync(model);
+            Console.WriteLine(string.IsNullOrEmpty(errorMessages)
+                ? "Services checked. OK"
+                : $"Services checked:{Environment.NewLine}{errorMessages} ");
             
             return errorMessages;
         }
@@ -261,7 +255,7 @@ namespace Lykke.SettingsReader
                 var optionalAttribute = property.GetCustomAttribute(typeof(OptionalAttribute));
                 
                 if (optionalAttribute == null)
-                    throw new CheckFieldException(property.Name, val, "Empty setting value");
+                    return CheckFieldResult.Failed(property.Name, val, "Empty setting value").Description;
                 
                 return null;
             }

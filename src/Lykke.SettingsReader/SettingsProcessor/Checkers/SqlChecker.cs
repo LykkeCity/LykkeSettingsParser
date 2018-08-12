@@ -4,13 +4,6 @@ namespace Lykke.SettingsReader.Checkers
 {
     internal class SqlChecker : ISettingsFieldChecker
     {
-        private readonly bool _throwExceptionOnFail;
-
-        internal SqlChecker(bool throwExceptionOnFail)
-        {
-            _throwExceptionOnFail = throwExceptionOnFail;
-        }
-
         public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
             //TODO use   var sb = new SqlConnectionStringBuilder(value); to parse the connection string
@@ -26,7 +19,7 @@ namespace Lykke.SettingsReader.Checkers
             }
             catch
             {
-                return CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                return CheckFieldResult.Failed(propertyName, url);
             }
         }
     }
