@@ -32,8 +32,7 @@
             {
                 Url = url,
                 Result = true,
-                PropertyName = propertyName,
-                _error = null
+                PropertyName = propertyName
             };
         }
 
@@ -48,8 +47,7 @@
             {
                 Url = url,
                 Result = false,
-                PropertyName = propertyName,
-                _error = null
+                PropertyName = propertyName
             };
         }
         
@@ -61,17 +59,17 @@
         /// <param name="message">Error message</param>
         public static CheckFieldResult Failed(string propertyName, string fieldValue, string message)
         {
-            return new CheckFieldResult
-            {
-                Url = null,
-                Result = false,
-                PropertyName = propertyName,
-                _error = $"Check of the '{propertyName}' field value [{fieldValue}] is failed: {message}"
-            };
+            return new CheckFieldResult(propertyName, fieldValue, message);
         }
 
         private CheckFieldResult()
         {
+        }
+
+        private CheckFieldResult(string propertyName, string fieldValue, string message)
+        {
+            _error = $"Check of the '{propertyName}' field value [{fieldValue}] is failed: {message}";
+            PropertyName = propertyName;
         }
     }
 }
