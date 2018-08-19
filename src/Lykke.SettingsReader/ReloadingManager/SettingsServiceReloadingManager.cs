@@ -16,13 +16,11 @@ namespace Lykke.SettingsReader
         public SettingsServiceReloadingManager(string settingsUrl, Func<TSettings, (string, string, string)> slackInfo, Action<TSettings> configure = null)
         {
             if (string.IsNullOrEmpty(settingsUrl))
-            {
                 throw new ArgumentException("Url not specified.", nameof(settingsUrl));
-            }
 
             _settingsUrl = settingsUrl;
             _configure = configure;
-            _slackInfo = slackInfo;
+            _slackInfo = slackInfo ?? throw new ArgumentNullException(nameof(slackInfo));
         }
 
         protected override async Task<TSettings> Load()

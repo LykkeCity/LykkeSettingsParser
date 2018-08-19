@@ -15,12 +15,10 @@ namespace Lykke.SettingsReader
         public LocalSettingsReloadingManager(string path, Func<TSettings, (string, string, string)> slackInfo)
         {
             if (string.IsNullOrEmpty(path))
-            {
                 throw new ArgumentException("Path not specified.", nameof(path));
-            }
 
             _path = path;
-            _slackInfo = slackInfo;
+            _slackInfo = slackInfo ?? throw new ArgumentNullException(nameof(slackInfo));
         }
 
         protected override async Task<TSettings> Load()
