@@ -2,11 +2,10 @@
 The library allows you to parse JSON string in to object. If any of field won't be filled by json structure an Exception will throw.
 ## How to use
 First of all, ```SettingsUrl``` environment variable should contains URL or path to the file which contains the settings Json.
-Next, there is the only one static generic method, which you need to load the settings:
+Next, there is the only one static generic method, which you need to load the settings, pass function to return slack notification parameters
+to send failed depencencies checks:
 ```cs
- var model = Configuration.LoadSettings<ModelClass>();
- //to check dependencies at startup add the following:
- Configuration.CheckDependenciesAsync(model,slackConnString, slackQueueName, senderName);
+ var model = Configuration.LoadSettings<ModelClass>(settings => (settings.SlackNotifications.ConnString, settings.SlackNotifications.QueueName, "SenderName"));
 ```
 ## Using optional properties
 If your model assume to have fields which could be filled or not you can always use the `[Optional]` attribute. In this case if your json string is not contain the field, exception won't be threw.

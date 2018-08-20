@@ -5,12 +5,12 @@ namespace Lykke.SettingsReader {
     [Obsolete("Will be deleted. Have to use IConfiguration.LoadSettings extension method.")]
     public class SettingsReader {
         public static T ReadGeneralSettings<T>(Uri url) {
-            var reloadingManager = new SettingsServiceReloadingManager<T>(url.ToString());
+            var reloadingManager = new SettingsServiceReloadingManager<T>(url.ToString(), null);
             return reloadingManager.CurrentValue;
         }
 
         public static T ReadGeneralSettings<T>(string path) {
-            var reloadingManager = new LocalSettingsReloadingManager<T>(path);
+            var reloadingManager = new LocalSettingsReloadingManager<T>(path, null);
             return reloadingManager.CurrentValue;
         }
     }

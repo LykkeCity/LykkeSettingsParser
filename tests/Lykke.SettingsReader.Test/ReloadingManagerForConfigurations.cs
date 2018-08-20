@@ -27,12 +27,12 @@ namespace Lykke.SettingsReader.Test
             }
         }
 
-        protected override Task<ConfigurationModel> Load()
+        protected override async Task<ConfigurationModel> Load()
         {
-            var processingResult = SettingsProcessor.ProcessForConfiguration<ConfigurationModel>(_settingsJson);
+            var processingResult = await SettingsProcessor.ProcessForConfigurationAsync<ConfigurationModel>(_settingsJson);
             var settings = processingResult.Item1;
             SetSettingsConfigurationRoot(processingResult.Item2);
-            return Task.FromResult(settings);
+            return settings;
         }
     }
 }

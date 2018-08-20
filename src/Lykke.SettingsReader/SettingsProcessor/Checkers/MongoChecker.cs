@@ -6,13 +6,6 @@ namespace Lykke.SettingsReader.Checkers
 {
     internal class MongoChecker : ISettingsFieldChecker
     {
-        private readonly bool _throwExceptionOnFail;
-
-        internal MongoChecker(bool throwExceptionOnFail)
-        {
-            _throwExceptionOnFail = throwExceptionOnFail;
-        }
-
         public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
             try
@@ -25,15 +18,15 @@ namespace Lykke.SettingsReader.Checkers
                 
                 return client.Cluster.Description.State == ClusterState.Connected
                     ? CheckFieldResult.Ok(propertyName, value)
-                    : CheckFieldResult.Failed(propertyName, value, _throwExceptionOnFail);
+                    : CheckFieldResult.Failed(propertyName, value);
             }
             catch (MongoConfigurationException)
             {
-                return CheckFieldResult.Failed(propertyName, value, _throwExceptionOnFail);
+                return CheckFieldResult.Failed(propertyName, value);
             }
             catch (TimeoutException)
             {
-                return CheckFieldResult.Failed(propertyName, value, _throwExceptionOnFail);
+                return CheckFieldResult.Failed(propertyName, value);
             }
         }
     }

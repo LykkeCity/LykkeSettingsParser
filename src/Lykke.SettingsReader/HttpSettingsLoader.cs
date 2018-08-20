@@ -23,7 +23,7 @@ namespace Lykke.SettingsReader {
                 throw new SettingsSourceException("settingsUrl not specified and environment variable 'SettingsUrl' is not defined");
             }
 
-            var reloadingManager = new SettingsServiceReloadingManager<TSettings>(settingsUrl);
+            var reloadingManager = new SettingsServiceReloadingManager<TSettings>(settingsUrl, null);
             return reloadingManager.CurrentValue;
         }
     }

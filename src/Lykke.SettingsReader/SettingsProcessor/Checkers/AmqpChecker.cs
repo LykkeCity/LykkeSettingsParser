@@ -4,13 +4,6 @@ namespace Lykke.SettingsReader.Checkers
 {
     internal class AmqpChecker : ISettingsFieldChecker
     {
-        private readonly bool _throwExceptionOnFail;
-
-        internal AmqpChecker(bool throwExceptionOnFail)
-        {
-            _throwExceptionOnFail = throwExceptionOnFail;
-        }
-
         public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
             ConnectionFactory factory;
@@ -20,8 +13,9 @@ namespace Lykke.SettingsReader.Checkers
             }
             catch
             {
-                return CheckFieldResult.Failed(propertyName, value, _throwExceptionOnFail);
+                return CheckFieldResult.Failed(propertyName, value);
             }
+            
             var schema = factory.Ssl.Enabled ? "amqps" : "amqp";
             var url = $"{schema}://{factory.HostName}:{factory.Port}";
 
@@ -32,12 +26,12 @@ namespace Lykke.SettingsReader.Checkers
                     bool checkResult = connection.IsOpen;
                     return checkResult
                         ? CheckFieldResult.Ok(propertyName, url)
-                        : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                        : CheckFieldResult.Failed(propertyName, url);
                 }
             }
             catch
             {
-                return CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                return CheckFieldResult.Failed(propertyName, url);
             }
         }
     }

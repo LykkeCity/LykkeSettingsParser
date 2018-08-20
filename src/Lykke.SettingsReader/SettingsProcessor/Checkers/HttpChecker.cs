@@ -7,12 +7,10 @@ namespace Lykke.SettingsReader.Checkers
     internal class HttpChecker : ISettingsFieldChecker
     {
         private readonly string _path;
-        private readonly bool _throwExceptionOnFail;
 
-        internal HttpChecker(string path, bool throwExceptionOnFail)
+        internal HttpChecker(string path)
         {
             _path = path;
-            _throwExceptionOnFail = throwExceptionOnFail;
         }
 
         public CheckFieldResult CheckField(object model, string propertyName, string value)
@@ -20,7 +18,7 @@ namespace Lykke.SettingsReader.Checkers
             string url = GetFullUrl(value);
             
             if (string.IsNullOrEmpty(url))
-                return CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                return CheckFieldResult.Failed(propertyName, url);
 
             try
             {
@@ -33,11 +31,11 @@ namespace Lykke.SettingsReader.Checkers
 
                 return checkResult
                     ? CheckFieldResult.Ok(propertyName, url)
-                    : CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                    : CheckFieldResult.Failed(propertyName, url);
             }
             catch (Exception)
             {
-                return CheckFieldResult.Failed(propertyName, url, _throwExceptionOnFail);
+                return CheckFieldResult.Failed(propertyName, url);
             }
         }
 
