@@ -157,7 +157,7 @@ namespace Lykke.SettingsReader.Test
             var settings = await SettingsProcessor.ProcessAsync<TestHttpCheckModel>(
                     $"{{'Service': {{'ServiceUrl': '{ServiceUrl}'}}, 'Url': '{ServiceUrl}', 'Port':5672, 'Num': 1234}}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Null(message);
         }
@@ -170,7 +170,7 @@ namespace Lykke.SettingsReader.Test
                     $"'IList': [{{'ServiceUrl': '{ServiceUrl}'}}], 'RoList': [{{'ServiceUrl': '{ServiceUrl}'}}], " +
                     $"'RoCollection': [{{'ServiceUrl': '{ServiceUrl}'}}], 'Enumerable': [{{'ServiceUrl': '{ServiceUrl}'}}]}}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Null(message);
         }
@@ -182,7 +182,7 @@ namespace Lykke.SettingsReader.Test
                     $"{{'Services': ['{ServiceUrl}'],'List': ['{ServiceUrl}'],'IList': ['{ServiceUrl}']," +
                     $"'RoList': ['{ServiceUrl}'],'RoCollection': ['{ServiceUrl}'],'Enumerable': ['{ServiceUrl}']}}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Null(message);
         }
@@ -195,7 +195,7 @@ namespace Lykke.SettingsReader.Test
                     $"'IDict': {{'first': {{'ServiceUrl': '{ServiceUrl}'}} }}," +
                     $"'RoDict': {{'first': {{'ServiceUrl': '{ServiceUrl}'}} }} }}");
             
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Null(message);
         }
@@ -206,7 +206,7 @@ namespace Lykke.SettingsReader.Test
             var settings = await SettingsProcessor.ProcessAsync<TestHttpCheckModel>(
                     $"{{'Service': {{'ServiceUrl': 'not_url_at_all'}}, 'Url': '{ServiceUrl}/', 'Port':5672, 'Num': 1234}}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Contains("Failed", message);
         }
@@ -217,7 +217,7 @@ namespace Lykke.SettingsReader.Test
             var settings = await SettingsProcessor.ProcessAsync<TestHttpCheckModel>(
                 $"{{'Service': {{'ServiceUrl': '{ServiceUrl}'}}, 'Url': '', 'Port':5672, 'Num': 1234}}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Contains("Empty setting value", message);
         }
@@ -239,7 +239,7 @@ namespace Lykke.SettingsReader.Test
             {
                 var settings = await SettingsProcessor.ProcessAsync<TestTcpCheckArrayModel>($"{{'{pair.Item1}': [{{'HostPort': '{pair.Item2}'}}] }}");
                 
-                string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
                 
                 Assert.Contains("Failed", message);
             }
@@ -261,7 +261,7 @@ namespace Lykke.SettingsReader.Test
             {
                 var settings = await SettingsProcessor.ProcessAsync<TestTcpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
                 
-                string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
                 
                 Assert.Contains("Failed", message);
             }
@@ -275,7 +275,7 @@ namespace Lykke.SettingsReader.Test
                                                                                              
                                                                        "'RoDict': {'first': {'HostPort': '127.0.0.1:5672'}}}");
             
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Null(message);
         }
@@ -286,7 +286,7 @@ namespace Lykke.SettingsReader.Test
             var settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>(
                 "{'HostInfo': {'HostPort': '127.0.0.1:zzz'}, 'Host': '127.0.0.1', 'Port': 5672, 'Server': '127.0.0.1'}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.NotNull(message);
             Assert.Contains("Invalid port", message);
@@ -300,26 +300,26 @@ namespace Lykke.SettingsReader.Test
 
             var settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>($"{{'HostInfo': {{'HostPort': '{host}:{port}'}} }}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Contains("Failed", message);
             
             settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': 'not a port'}}");
             
-            message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            message = await SettingsProcessor.CheckDependenciesAsync(settings);
 
             Assert.NotNull(message);
             Assert.Equal($"Check of the 'Host' field value [{host}] is failed: Invalid port value in property 'Port'", message);
 
             settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>($"{{'Host': '{host}', 'Port': '{port}'}}");
 
-            message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Contains("Failed", message);
 
             settings = await SettingsProcessor.ProcessAsync<TestTcpCheckModel>($"{{'Server': '{host}'}}");
 
-            message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Contains("Failed", message);
         }
@@ -329,7 +329,7 @@ namespace Lykke.SettingsReader.Test
         {
             var settings = await SettingsProcessor.ProcessAsync<WrongTestTcpCheckModel>("{'Host': '127.0.0.1', 'Port': '5672'}");
             
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
 
             Assert.NotNull(message);
             Assert.Equal("Check of the 'Host' field value [127.0.0.1] is failed: Property 'ServicePort' not found", message);
@@ -366,7 +366,7 @@ namespace Lykke.SettingsReader.Test
             foreach (var pair in checkList)
             {
                 var settings = await SettingsProcessor.ProcessAsync<TestAmqpCheckArrayModel>($"{{'{pair.Item1}': [{{'ConnString': '{pair.Item2}'}}] }}");
-                string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
                 Assert.Contains("Failed", message);
             }
         }
@@ -386,7 +386,7 @@ namespace Lykke.SettingsReader.Test
             foreach (var pair in checkList)
             {
                 var settings = await SettingsProcessor.ProcessAsync<TestAmqpCheckListModel>($"{{'{pair.Item1}': ['{pair.Item2}'] }}");
-                string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+                string message = await SettingsProcessor.CheckDependenciesAsync(settings);
                 Assert.Contains("Failed", message);
             }
         }
@@ -399,7 +399,7 @@ namespace Lykke.SettingsReader.Test
             
                                                                                               "'RoDict': {'first': {'ConnString': 'amqp://guest:guest@localhost:5672'}}}");
             
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Null(message);
         }
@@ -410,7 +410,7 @@ namespace Lykke.SettingsReader.Test
             var settings = await SettingsProcessor.ProcessAsync<TestAmqpCheckModel>(
                 "{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'amqp://lykke.user:123qwe123qwe123@rabbit-registration.lykke-service.svc.cluster.local:zzz'}}");
             
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Contains("Failed", message);
         }
@@ -421,7 +421,7 @@ namespace Lykke.SettingsReader.Test
             var settings = await SettingsProcessor.ProcessAsync<TestAmqpCheckModel>(
                 "{'ConnStr': 'amqp://guest:guest@localhost:5672', 'Rabbit': {'ConnString': 'rabbit-registration.lykke-service.svc.cluster.local:5672'}}");
 
-            string message = await SettingsProcessor.CheckDependenciesAsync(settings, model => ("", "", ""));
+            string message = await SettingsProcessor.CheckDependenciesAsync(settings);
             
             Assert.Contains("Failed", message);
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Lykke.SettingsReader.ReloadingManager.Configuration;
 using Microsoft.Extensions.Configuration;
 
 namespace Lykke.SettingsReader
@@ -19,7 +20,7 @@ namespace Lykke.SettingsReader
         /// <typeparam name="TSettings">model for settings</typeparam>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        [Obsolete("Use LoadSettings method with Func")]
+        [Obsolete("Use LoadSettings method with Action")]
         public static IReloadingManagerWithConfiguration<TSettings> LoadSettings<TSettings>(
             this IConfiguration configuration,
             string key = null,
@@ -47,7 +48,7 @@ namespace Lykke.SettingsReader
         /// Loads settings
         /// </summary>
         /// <param name="configuration"></param>
-        /// <param name="slackCheckerSettings">function to return connection string, queue name and sender name for slack notifications</param>
+        /// <param name="slackNotificationOptions">action to configure connection string, queue name and sender name for slack notifications</param>
         /// <param name="key">key name in the configuration</param>
         /// <param name="configure">action to configure settings</param>
         /// <typeparam name="TSettings">model for settings</typeparam>
@@ -55,7 +56,7 @@ namespace Lykke.SettingsReader
         /// <exception cref="InvalidOperationException"></exception>
         public static IReloadingManagerWithConfiguration<TSettings> LoadSettings<TSettings>(
             this IConfiguration configuration,
-            Func<TSettings, (string slackConnString, string queueName, string senderName)> slackCheckerSettings,
+            Action<SlackNotificationOptions<TSettings>> slackNotificationOptions,
             string key = null,
             Action<TSettings> configure = null
         )
@@ -69,15 +70,15 @@ namespace Lykke.SettingsReader
                 throw new InvalidOperationException($"The connection string to the settings was not found by configuration key '{key}'");
             }
             
-            if (slackCheckerSettings == null)
-                throw new ArgumentNullException(nameof(slackCheckerSettings));
+            if (slackNotificationOptions == null)
+                throw new ArgumentNullException(nameof(slackNotificationOptions));
 
             if (settingsUrl.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
             {
-                return new SettingsServiceReloadingManager<TSettings>(settingsUrl, slackCheckerSettings, configure);
+                return new SettingsServiceReloadingManager<TSettings>(settingsUrl, slackNotificationOptions, configure);
             }
 
-            return new LocalSettingsReloadingManager<TSettings>(settingsUrl, slackCheckerSettings);
+            return new LocalSettingsReloadingManager<TSettings>(settingsUrl, slackNotificationOptions);
         }
     }
 }
