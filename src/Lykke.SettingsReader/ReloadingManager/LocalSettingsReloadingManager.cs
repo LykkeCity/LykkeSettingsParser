@@ -18,7 +18,7 @@ namespace Lykke.SettingsReader
                 throw new ArgumentException("Path not specified.", nameof(path));
 
             _path = path;
-            _slackNotificationOptions = slackNotificationOptions ?? throw new ArgumentNullException(nameof(slackNotificationOptions));
+            _slackNotificationOptions = slackNotificationOptions;
         }
 
         protected override async Task<TSettings> Load()
