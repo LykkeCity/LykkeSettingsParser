@@ -19,7 +19,7 @@ namespace Lykke.SettingsReader
                 throw new ArgumentException("Url not specified.", nameof(settingsUrl));
 
             _settingsUrl = settingsUrl;
-            _slackNotificationOptions = slackNotificationOptions ?? throw new ArgumentNullException(nameof(slackNotificationOptions));
+            _slackNotificationOptions = slackNotificationOptions;
             _configure = configure;
         }
 
