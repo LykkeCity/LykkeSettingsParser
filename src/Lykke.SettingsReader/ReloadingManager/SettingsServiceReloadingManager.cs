@@ -10,17 +10,17 @@ namespace Lykke.SettingsReader
     public class SettingsServiceReloadingManager<TSettings> : ReloadingManagerWithConfigurationBase<TSettings>
     {
         private readonly string _settingsUrl;
+        private readonly Action<SlackNotificationOptions<TSettings>> _slackNotificationOptions;
         private readonly Action<TSettings> _configure;
-        private readonly Func<TSettings, (string, string, string)> _slackInfo;
 
-        public SettingsServiceReloadingManager(string settingsUrl, Func<TSettings, (string, string, string)> slackInfo, Action<TSettings> configure = null)
+        public SettingsServiceReloadingManager(string settingsUrl, Action<SlackNotificationOptions<TSettings>> slackNotificationOptions, Action<TSettings> configure = null)
         {
             if (string.IsNullOrEmpty(settingsUrl))
                 throw new ArgumentException("Url not specified.", nameof(settingsUrl));
 
             _settingsUrl = settingsUrl;
+            _slackNotificationOptions = slackNotificationOptions ?? throw new ArgumentNullException(nameof(slackNotificationOptions));
             _configure = configure;
-            _slackInfo = slackInfo ?? throw new ArgumentNullException(nameof(slackInfo));
         }
 
         protected override async Task<TSettings> Load()
@@ -32,7 +32,7 @@ namespace Lykke.SettingsReader
             var settings = processingResult.Item1;
             SetSettingsConfigurationRoot(processingResult.Item2);
 
-            Task.Run(() => SettingsProcessor.CheckDependenciesAsync(settings, _slackInfo));
+            Task.Run(() => SettingsProcessor.CheckDependenciesAsync(settings, _slackNotificationOptions));
             
             _configure?.Invoke(settings);
             return settings;

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
 using Lykke.SettingsReader.Exceptions;
+using Lykke.SettingsReader.ReloadingManager.Configuration;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using MongoDB.Bson;
@@ -71,26 +72,21 @@ namespace Lykke.SettingsReader
         /// Checks dependencies
         /// </summary>
         /// <param name="model">model to check dependenices for</param>
-        /// <param name="slackInfo">function to get slack notification parameters</param>
+        /// <param name="slackNotificationOptions">options to set slack notification parameters</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static async Task<string> CheckDependenciesAsync<T>(T model, Func<T, (string, string, string)> slackInfo)
+        public static async Task<string> CheckDependenciesAsync<T>(T model, Action<SlackNotificationOptions<T>> slackNotificationOptions = null)
         {
-            string connString = null;
-            string queueName = null;
-            string sender = null;
-            
-            if (slackInfo != null)
-            {
-                (connString, queueName, sender) = slackInfo(model);
-            }
+            var slackInfo = new SlackNotificationOptions<T>(model);
 
-            if (!string.IsNullOrEmpty(connString) && !string.IsNullOrEmpty(queueName))
+            slackNotificationOptions?.Invoke(slackInfo);
+
+            if (!string.IsNullOrEmpty(slackInfo.ConnectionString) && !string.IsNullOrEmpty(slackInfo.QueueName))
             {
-                var account = CloudStorageAccount.Parse(connString);
+                var account = CloudStorageAccount.Parse(slackInfo.ConnectionString);
                 var client = account.CreateCloudQueueClient();
-                _queue = client.GetQueueReference(queueName);
-                _sender = sender;
+                _queue = client.GetQueueReference(slackInfo.QueueName);
+                _sender = slackInfo.SenderName;
                 await _queue.CreateIfNotExistsAsync();
             }
 
