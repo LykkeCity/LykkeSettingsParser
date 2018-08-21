@@ -14,12 +14,12 @@ namespace Lykke.SettingsReader.ReloadingManager.Configuration
         /// <summary>
         /// Azure connection string
         /// </summary>
-        internal string ConnectionString { get; set; }
+        internal string ConnectionString { get; private set; }
         
         /// <summary>
         /// Azure queue name
         /// </summary>
-        internal string QueueName { get; set; }
+        internal string QueueName { get; private set; }
         
         /// <summary>
         /// Sender name used in slack notification message
