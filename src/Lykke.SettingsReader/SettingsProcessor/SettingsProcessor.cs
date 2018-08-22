@@ -77,20 +77,34 @@ namespace Lykke.SettingsReader
         /// <returns></returns>
         public static async Task<string> CheckDependenciesAsync<T>(T model, Action<SlackNotificationOptions<T>> slackNotificationOptions = null)
         {
+            Console.WriteLine("Start checking services...");
+            
             var slackInfo = new SlackNotificationOptions<T>(model);
 
             slackNotificationOptions?.Invoke(slackInfo);
 
             if (!string.IsNullOrEmpty(slackInfo.ConnectionString) && !string.IsNullOrEmpty(slackInfo.QueueName))
             {
-                var account = CloudStorageAccount.Parse(slackInfo.ConnectionString);
-                var client = account.CreateCloudQueueClient();
-                _queue = client.GetQueueReference(slackInfo.QueueName);
-                _sender = slackInfo.SenderName;
-                await _queue.CreateIfNotExistsAsync();
+                if (CloudStorageAccount.TryParse(slackInfo.ConnectionString, out var account))
+                {
+                    try
+                    {
+                        var client = account.CreateCloudQueueClient();
+                        _queue = client.GetQueueReference(slackInfo.QueueName);
+                        _sender = slackInfo.SenderName;
+                        await _queue.CreateIfNotExistsAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Can't get queue: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid slack connection string");
+                }
             }
 
-            Console.WriteLine("Start checking services...");
             var errorMessages = await ProcessChecksAsync(model);
             Console.WriteLine(string.IsNullOrEmpty(errorMessages)
                 ? "Services checked. OK"
