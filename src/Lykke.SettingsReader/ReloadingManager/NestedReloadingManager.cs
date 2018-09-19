@@ -31,14 +31,33 @@ namespace Lykke.SettingsReader
 
         protected override async Task<T> Load()
         {
-            var actualValue = _expr(_rootManager.CurrentValue);
-
-            if (_equal != null && !_equal(actualValue, _current))
+            if (TryGetActualRootValue(out var actualRootValue))
             {
-                return _current = actualValue;
+                var actualValue = _expr(actualRootValue);
+                
+                if (!_equal(actualValue, _current))
+                {
+                    return _current = actualValue;
+                }
             }
-
+            
             return _current = _expr(await _rootManager.Reload());
+        }
+
+        private bool TryGetActualRootValue(out TRoot value)
+        {
+            try
+            {
+                value = _rootManager.CurrentValue;
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                value = default(TRoot);
+
+                return false;
+            }
         }
     }
 }
