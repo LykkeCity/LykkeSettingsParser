@@ -7,7 +7,8 @@ namespace Lykke.SettingsReader.Attributes
     /// </summary>
     public class AzureTableCheckAttribute : BaseCheckAttribute
     {
-        internal override ISettingsFieldChecker GetChecker()
+        /// <inheritdoc />
+        public override ISettingsFieldChecker GetChecker()
         {
             return new AzureTableChecker();
         }

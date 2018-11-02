@@ -21,7 +21,8 @@ namespace Lykke.SettingsReader.Attributes
             Path = path;
         }
 
-        internal override ISettingsFieldChecker GetChecker()
+        /// <inheritdoc />
+        public override ISettingsFieldChecker GetChecker()
         {
             return new HttpChecker(Path);
         }
