@@ -31,7 +31,8 @@ namespace Lykke.SettingsReader.Attributes
             Port = port;
         }
 
-        internal override ISettingsFieldChecker GetChecker()
+        /// <inheritdoc />
+        public override ISettingsFieldChecker GetChecker()
         {
             return new TcpChecker(PortName, Port);
         }

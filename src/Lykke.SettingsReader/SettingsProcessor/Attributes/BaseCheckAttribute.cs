@@ -8,6 +8,10 @@ namespace Lykke.SettingsReader.Attributes
     [AttributeUsage(AttributeTargets.Property)]
     public abstract class BaseCheckAttribute : Attribute
     {
-        internal abstract ISettingsFieldChecker GetChecker();
+        /// <summary>
+        /// Gets a checker which can validate this attribute
+        /// </summary>
+        /// <returns></returns>
+        public abstract ISettingsFieldChecker GetChecker();
     }
 }

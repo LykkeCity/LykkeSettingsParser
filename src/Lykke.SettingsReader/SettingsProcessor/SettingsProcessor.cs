@@ -32,6 +32,15 @@ namespace Lykke.SettingsReader
             .WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(100));
 
         /// <summary>
+        /// Gets or sets the retry policy used when validating settings
+        /// </summary>
+        public static RetryPolicy<CheckFieldResult> RetryPolicy
+        {
+            get => _retry;
+            set => _retry = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
+        /// <summary>
         /// Parses and validates settings json.
         /// </summary>
         /// <typeparam name="T">Type for parsing</typeparam>
