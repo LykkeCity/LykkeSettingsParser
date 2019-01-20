@@ -7,10 +7,12 @@ namespace Lykke.SettingsReader.Checkers
     internal class HttpChecker : ISettingsFieldChecker
     {
         private readonly string _path;
+        private readonly TimeSpan _timeout;
 
-        internal HttpChecker(string path)
+        internal HttpChecker(string path, TimeSpan timeout)
         {
             _path = path;
+            _timeout = timeout;
         }
 
         public CheckFieldResult CheckField(object model, string propertyName, string value)
@@ -23,8 +25,11 @@ namespace Lykke.SettingsReader.Checkers
             try
             {
                 bool checkResult;
-                
-                using (var response = HttpClientProvider.Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult())
+
+                var httpClient = HttpClientProvider.Client;
+                httpClient.Timeout = _timeout;
+
+                using (var response = httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult())
                 {
                     checkResult = response.IsSuccessStatusCode;
                 }
