@@ -1,4 +1,5 @@
-﻿using Lykke.SettingsReader.Checkers;
+﻿using System;
+using Lykke.SettingsReader.Checkers;
 
 namespace Lykke.SettingsReader.Attributes
 {
@@ -13,18 +14,25 @@ namespace Lykke.SettingsReader.Attributes
         public string Path { get; }
 
         /// <summary>
+        /// Timeout for http request
+        /// </summary>
+        public TimeSpan Timeout { get; }
+
+        /// <summary>
         /// Default c-tor with relative uri parameter
         /// </summary>
         /// <param name="path">Relative uri</param>
-        public HttpCheckAttribute(string path)
+        /// <param name="timeoutSeconds">Timeout in seconds for httpRequest</param>
+        public HttpCheckAttribute(string path, int timeoutSeconds = 10)
         {
             Path = path;
+            Timeout = TimeSpan.FromSeconds(timeoutSeconds);
         }
 
         /// <inheritdoc />
         public override ISettingsFieldChecker GetChecker()
         {
-            return new HttpChecker(Path);
+            return new HttpChecker(Path, Timeout);
         }
     }
 }
