@@ -12,8 +12,12 @@ namespace Lykke.SettingsReader
         private readonly string _settingsUrl;
         private readonly Action<SlackNotificationOptions<TSettings>> _slackNotificationOptions;
         private readonly Action<TSettings> _configure;
+        private readonly bool _throwExceptionOnCheckError;
 
-        public SettingsServiceReloadingManager(string settingsUrl, Action<SlackNotificationOptions<TSettings>> slackNotificationOptions, Action<TSettings> configure = null)
+        public SettingsServiceReloadingManager(string settingsUrl, 
+            Action<SlackNotificationOptions<TSettings>> slackNotificationOptions, 
+            Action<TSettings> configure = null,
+            bool throwExceptionOnCheckError = false)
         {
             if (string.IsNullOrEmpty(settingsUrl))
                 throw new ArgumentException("Url not specified.", nameof(settingsUrl));
@@ -21,6 +25,7 @@ namespace Lykke.SettingsReader
             _settingsUrl = settingsUrl;
             _slackNotificationOptions = slackNotificationOptions;
             _configure = configure;
+            _throwExceptionOnCheckError = throwExceptionOnCheckError;
         }
 
         protected override async Task<TSettings> Load()
@@ -32,7 +37,20 @@ namespace Lykke.SettingsReader
             var settings = processingResult.Item1;
             SetSettingsConfigurationRoot(processingResult.Item2);
 
-            Task.Run(() => SettingsProcessor.CheckDependenciesAsync(settings, _slackNotificationOptions));
+            if (!_throwExceptionOnCheckError)
+            {
+                Task.Run(() => SettingsProcessor.CheckDependenciesAsync(settings, _slackNotificationOptions));
+            }
+            else
+            {
+                var errorMessages = await SettingsProcessor.CheckDependenciesAsync(settings,
+                    _slackNotificationOptions);
+
+                if (!string.IsNullOrEmpty(errorMessages))
+                {
+                    throw new Exception($"Services check failed:{Environment.NewLine}{errorMessages} ");
+                }
+            }
             
             _configure?.Invoke(settings);
             return settings;
