@@ -1,4 +1,5 @@
-﻿using System.Data.SqlClient;
+﻿using System;
+using System.Data.SqlClient;
 
 namespace Lykke.SettingsReader.Checkers
 {
@@ -6,20 +7,22 @@ namespace Lykke.SettingsReader.Checkers
     {
         public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
-            //TODO use   var sb = new SqlConnectionStringBuilder(value); to parse the connection string
-            string url = string.Empty;
+            var url = string.Empty;
+            
             try
             {
-                using (var connection = new SqlConnection(value))
+                var sb = new SqlConnectionStringBuilder(value);
+                url = sb.DataSource;
+                
+                using (var connection = new SqlConnection(sb.ConnectionString))
                 {
-                    url = connection.DataSource;
                     connection.Open();
                 }
                 return CheckFieldResult.Ok(propertyName, url);
             }
-            catch
+            catch (Exception ex)
             {
-                return CheckFieldResult.Failed(propertyName, url);
+                return CheckFieldResult.Failed(propertyName, url, ex.Message);
             }
         }
     }
