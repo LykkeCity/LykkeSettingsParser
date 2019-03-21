@@ -17,10 +17,16 @@ namespace Lykke.SettingsReader.Checkers
 
         public CheckFieldResult CheckField(object model, string propertyName, string value)
         {
-            string url = GetFullUrl(value);
-            
-            if (string.IsNullOrEmpty(url))
-                return CheckFieldResult.Failed(propertyName, url);
+            string url = string.Empty;
+
+            try
+            {
+                url = GetFullUrl(value);
+            }
+            catch (Exception)
+            {
+                return CheckFieldResult.Failed(propertyName, string.Concat(value, _path));
+            }
 
             try
             {
@@ -44,16 +50,7 @@ namespace Lykke.SettingsReader.Checkers
             }
         }
 
-        private string GetFullUrl(string url)
-        {
-            try
-            {
-                return new Uri(new Uri(url), _path).ToString();
-            }
-            catch (Exception)
-            {
-                return string.Empty;
-            }
-        }
+        private string GetFullUrl(string url) =>
+            new Uri(new Uri(url), _path).ToString();
     }
 }
