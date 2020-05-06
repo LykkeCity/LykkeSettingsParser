@@ -1,4 +1,5 @@
-﻿using RabbitMQ.Client;
+﻿using System;
+using RabbitMQ.Client;
 
 namespace Lykke.SettingsReader.Checkers
 {
@@ -9,7 +10,7 @@ namespace Lykke.SettingsReader.Checkers
             ConnectionFactory factory;
             try
             {
-                factory = new ConnectionFactory { Uri = value };
+                factory = new ConnectionFactory {Uri = new Uri(value, UriKind.Absolute)};
             }
             catch
             {
